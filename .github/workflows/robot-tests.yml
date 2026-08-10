@@ -52,10 +52,15 @@ jobs:
       - name: Run Robot Framework tests
         run: |
           robot \
+            --variable HEADLESS:True \
             --outputdir results \
             --xunit xunit.xml \
             tests/
         continue-on-error: false   # PR/merge must fail if any test breaks
+        # HEADLESS:True overrides the ${HEADLESS} variable used in
+        # global_page.resource's "New Browser" keyword (CLI --variable takes
+        # precedence over the *** Variables *** default), so the suite runs
+        # headless in CI while local runs keep the resource's own default.
 
       - name: Publish summary on GitHub Actions
         if: always()

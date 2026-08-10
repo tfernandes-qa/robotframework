@@ -28,18 +28,25 @@ them easier to read and maintain.
 
 ```text
 robotframework/
+├── .github/
+│   └── workflows/
+│       └── robot-tests.yml
 ├── requirements.txt
 ├── resources/
 │   ├── api/
 │   │   └── users_api.resource
 │   ├── pages/
+│   │   ├── global_page.resource
 │   │   ├── home_page.resource
-│   │   └── login_page.resource
+│   │   ├── login_page.resource
+│   │   └── store_page.resource
 │   └── variables/
 │       └── global.resource
 └── tests/
-    └── login/
-        └── login.robot
+    ├── login/
+    │   └── login.robot
+    └── store/
+        └── store.robot
 ```
 
 ### `requirements.txt`
@@ -64,6 +71,21 @@ Global variables shared across the whole project:
 
 Also loads the `Browser` and `DebugLibrary` libraries, so any resource that
 imports this file has access to them.
+
+### `resources/pages/global_page.resource`
+
+Shared setup/teardown keywords used by more than one test suite (login and
+store), gluing together the API resource and the page objects to open the
+browser and prepare/clean up test data:
+
+- **Keywords**:
+  - `Open Login Page` — opens a new browser/context/page already on the
+    login screen.
+  - `Prepare Login Test` — creates a valid user via the API and opens the
+    login page, leaving `${EMAIL}`, `${PASSWORD}`, and `${USER_ID}`
+    available as test variables for the test and its teardown.
+  - `Cleanup Login Test` — closes the browser and removes, via the API, the
+    user created in the setup.
 
 ### `resources/pages/login_page.resource`
 
@@ -91,6 +113,26 @@ successful login. Contains:
     page) and checking the current URL. The wait is needed because the
     redirect happens client-side (SPA), asynchronously after clicking
     "Entrar".
+
+### `resources/pages/store_page.resource`
+
+Page object for the store/home screen's shopping list feature. Contains:
+
+- **Locators**: `${HOME_BUTTON}`, `${ADD_TO_LIST_BUTTON}`,
+  `${CLEAR_LIST_BUTTON}`, `${CART_LIST_EMPTY}`.
+- **Keywords**:
+  - `Back To Home` — clicks the "Página Inicial" button to return to the
+    home page.
+  - `Clear List` — clicks the button to clear the shopping list.
+  - `Add Item To List` — finds a product card by its name and clicks the
+    button to add it to the shopping list.
+  - `Item Should Be In List` — verifies that the given product is visible
+    in the shopping cart list.
+  - `Increase Quantity of Item in List` — clicks the button to increase the
+    quantity of an item already in the shopping list.
+  - `Item Should Be Increased` — verifies that the quantity of the given
+    product has been increased in the shopping list.
+  - `List Should Be Empty` — verifies that the shopping list is empty.
 
 ### `resources/api/users_api.resource`
 
@@ -121,6 +163,38 @@ The `*** Keywords ***` section of this file defines the Given/When/Then style
 keywords used by the test cases (e.g. `this user types the email`,
 `clicks on Entrar`, `the message "..." must appear`), which simply delegate
 to the page object keywords described above.
+
+### `tests/store/store.robot`
+
+Test suite covering the shopping list on the ServeRest store/home page. It
+reuses `Prepare Login Test`/`Cleanup Login Test` (via `Open Browser To Home
+Page`) to log in as a fresh API-created user before each test, then drives
+the store page object to run scenarios such as:
+
+- Adding two items to the shopping list.
+- Increasing the quantity of an item already in the list.
+- Clearing the shopping list.
+
+The `*** Keywords ***` section of this file defines the Given/When/Then
+style keywords used by the test cases (e.g. `the user adds the first item to
+the list`, `the user clears the list`), which simply delegate to the store
+page object keywords described above.
+
+## Continuous Integration
+
+`.github/workflows/robot-tests.yml` runs the full suite on GitHub Actions:
+
+- **Triggers**: pull requests and pushes to `main`, plus manual runs via
+  `workflow_dispatch`. Runs are cancelled/deduped per branch (`concurrency`).
+- Sets up Python and Node.js (the Browser library driver needs Node),
+  installs `requirements.txt`, and runs `rfbrowser init` (with the
+  downloaded Playwright browsers cached across runs).
+- Executes `robot --outputdir results --xunit xunit.xml tests/`; the job
+  fails if any test fails.
+- Uploads `log.html`, `report.html`, and `output.xml` as the
+  `robot-framework-results` artifact, and `xunit.xml` as the
+  `robot-junit-report` artifact (both kept for 15 days), and writes a short
+  summary to the GitHub Actions run.
 
 ## Setup
 

@@ -1,0 +1,84 @@
+name: Robot Framework Tests
+
+on:
+  pull_request:
+    branches: [ main ]
+  push:
+    branches: [ main ]
+  workflow_dispatch: {}   # allows manual trigger from the Actions tab
+
+concurrency:
+  group: robot-tests-${{ github.ref }}
+  cancel-in-progress: true
+
+jobs:
+  robot-tests:
+    name: Run Robot Framework Suite
+    runs-on: ubuntu-latest
+    timeout-minutes: 30
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Set up Python
+        uses: actions/setup-python@v5
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Set up Node.js (required by the Browser library driver)
+        uses: actions/setup-node@v4
+        with:
+          node-version: '22'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v4
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Install browsers (rfbrowser init)
+        run: rfbrowser init
+        # Skips downloading binaries when the cache hits; rfbrowser is idempotent
+        # and fast once the browsers are already cached.
+
+      - name: Run Robot Framework tests
+        run: |
+          robot \
+            --outputdir results \
+            --xunit xunit.xml \
+            tests/
+        continue-on-error: false   # PR/merge must fail if any test breaks
+
+      - name: Publish summary on GitHub Actions
+        if: always()
+        run: |
+          {
+            echo "### Robot Framework Suite Result"
+            if [ -f results/output.xml ]; then
+              echo "Full report available in the **robot-framework-results** artifact."
+            fi
+          } >> "$GITHUB_STEP_SUMMARY"
+
+      - name: Upload artifacts (log.html, report.html, output.xml)
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-framework-results
+          path: results/
+          retention-days: 15
+
+      - name: Upload JUnit/xUnit report
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: robot-junit-report
+          path: xunit.xml
+          retention-days: 15

@@ -1,6 +1,5 @@
 *** Settings ***
 Documentation    Page object for the login screen (${BASE_URL}/login).
-Library          Browser
 Resource         ../variables/global.resource
 
 *** Variables ***
@@ -11,12 +10,6 @@ ${LOGIN_ERROR_MESSAGE}     .alert-dismissible > span
 
 
 *** Keywords ***
-Open Login Page
-    [Documentation]    Opens a new browser/context/page already on the login screen.
-    New Browser    browser=${BROWSER}    headless=${HEADLESS}
-    New Context
-    New Page    ${BASE_URL}/login
-
 Input Email
     [Documentation]    Fills in the email field.
     [Arguments]    ${email}

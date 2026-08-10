@@ -1,6 +1,7 @@
 *** Settings ***
 Documentation    ServeRest Front login tests (${BASE_URL}).
 Resource         ../../resources/variables/global.resource
+Resource         ../../resources/pages/global_page.resource
 Resource         ../../resources/pages/login_page.resource
 Resource         ../../resources/pages/home_page.resource
 Resource         ../../resources/api/users_api.resource
@@ -9,7 +10,7 @@ Test Teardown    Cleanup Login Test
 
 
 *** Test Cases ***
-Usuario Com Credenciais Validas Deve Ser Redirecionado Para A Home
+User With Valid Credentials Should Be Redirected To The Home
     [Documentation]    A user who enters a valid email and password and clicks
     ...                "Entrar" must be redirected to the home page.
     [Tags]    login    smoke
@@ -19,7 +20,7 @@ Usuario Com Credenciais Validas Deve Ser Redirecionado Para A Home
     And clicks on Entrar
     Then this user must be redirected to the home page
 
-Usuario Com Email Invalido Deve Ver Mensagem De Erro
+User With Invalid Email Should See Error Message
     [Documentation]    A user who enters an invalid email and/or password and clicks
     ...                "Entrar" must see a message informing that the
     ...                credentials are invalid.
@@ -30,7 +31,7 @@ Usuario Com Email Invalido Deve Ver Mensagem De Erro
     And clicks on Entrar
     Then the message "Email e/ou senha inválidos" must appear
 
-Usuario Com Senha Invalida Deve Ver Mensagem De Erro
+User With Invalid Password Should See Error Message
     [Documentation]    A user who enters an invalid email and/or password and clicks
     ...                "Entrar" must see a message informing that the
     ...                credentials are invalid.
@@ -41,7 +42,7 @@ Usuario Com Senha Invalida Deve Ver Mensagem De Erro
     And clicks on Entrar
     Then the message "Email e/ou senha inválidos" must appear
 
-Usuario Com Email Em Branco Deve Ver Mensagem De Erro
+User With Blank Email Should See Error Message
     [Documentation]    A user who enters an invalid email and/or password and clicks
     ...                "Entrar" must see a message informing that the
     ...                credentials are invalid.
@@ -51,7 +52,7 @@ Usuario Com Email Em Branco Deve Ver Mensagem De Erro
     And clicks on Entrar
     Then the message "Email é obrigatório" must appear
 
-Usuario Com Senha Em Branco Deve Ver Mensagem De Erro
+User With Blank Password Should See Error Message
     [Documentation]    A user who enters an invalid email and/or password and clicks
     ...                "Entrar" must see a message informing that the
     ...                credentials are invalid.
@@ -61,7 +62,7 @@ Usuario Com Senha Em Branco Deve Ver Mensagem De Erro
     And clicks on Entrar
     Then the message "Password é obrigatório" must appear
 
-Usuario Com Email De Formato Invalido Deve Ver Mensagem De Erro
+User With Invalid Email Format Should See Error Message
     [Documentation]    A user who enters a valid email and password and clicks
     ...                "Entrar" must be redirected to the home page.
     [Tags]    login    smoke
@@ -72,20 +73,6 @@ Usuario Com Email De Formato Invalido Deve Ver Mensagem De Erro
     Then the message "Email deve ser um email válido" must appear
 
 *** Keywords ***
-Prepare Login Test
-    [Documentation]    Creates a valid user via API and opens the login page,
-    ...                leaving email/password/id available for the test and teardown.
-    ${email}    ${password}    ${user_id}=    Create Standard User Via Api
-    Set Test Variable    ${EMAIL}    ${email}
-    Set Test Variable    ${PASSWORD}    ${password}
-    Set Test Variable    ${USER_ID}    ${user_id}
-    Open Login Page
-
-Cleanup Login Test
-    [Documentation]    Closes the browser and removes, via API, the user created in the setup.
-    Close Browser
-    Delete User Via Api    ${USER_ID}
-
 a user is trying to login
     No Operation
 

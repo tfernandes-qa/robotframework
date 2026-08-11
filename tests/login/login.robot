@@ -20,6 +20,13 @@ User With Valid Credentials Should Be Redirected To The Home
     And clicks on Entrar
     Then this user must be redirected to the home page
 
+Admin Can Access Admin Page
+    [Documentation]    This test case verifies that an admin user can access the admin page.
+    [Tags]    admin    smoke
+    Given the admin user wants to access the admin page   
+    When this admin user types the email and password
+    Then the admin page should be displayed
+
 User With Invalid Email Should See Error Message
     [Documentation]    A user who enters an invalid email and/or password and clicks
     ...                "Entrar" must see a message informing that the
@@ -92,3 +99,14 @@ this user must be redirected to the home page
 
 the message "${message}" must appear
     Login Error Message Should Be    ${message}
+
+the admin user wants to access the admin page
+    Prepare Admin Login Test
+
+this admin user types the email and password
+    Input Email    ${email}
+    Input Password    ${password}
+    Click Entrar Button
+
+the admin page should be displayed
+    Admin Page Should Be Displayed

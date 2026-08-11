@@ -5,7 +5,22 @@ on:
     branches: [ main ]
   push:
     branches: [ main ]
-  workflow_dispatch: {}   # allows manual trigger from the Actions tab
+  # Nightly full regression run — DISABLED for now.
+  # To turn it back on: uncomment the two lines below and merge this file
+  # into `main` (GitHub only reads `schedule` triggers from the workflow
+  # file version on the repo's default branch, not from feature branches).
+  # schedule:
+  #   - cron: '0 3 * * *'   # 03:00 UTC = 00:00 (meia-noite) em Brasília
+  workflow_dispatch:        # allows manual trigger from the Actions tab
+    inputs:
+      tag:
+        description: 'Robot tag to run'
+        required: false
+        default: regression
+        type: choice
+        options:
+          - smoke
+          - regression
 
 concurrency:
   group: robot-tests-${{ github.ref }}
@@ -20,6 +35,21 @@ jobs:
     steps:
       - name: Checkout code
         uses: actions/checkout@v4
+
+      - name: Determine which tag to run
+        id: tag
+        shell: bash
+        run: |
+          # PRs get the fast "smoke" subset for quick feedback; pushes to
+          # main and the nightly schedule run the full "regression" suite.
+          # workflow_dispatch lets a human pick either one on demand.
+          if [ "${{ github.event_name }}" = "pull_request" ]; then
+            echo "value=smoke" >> "$GITHUB_OUTPUT"
+          elif [ "${{ github.event_name }}" = "workflow_dispatch" ]; then
+            echo "value=${{ github.event.inputs.tag }}" >> "$GITHUB_OUTPUT"
+          else
+            echo "value=regression" >> "$GITHUB_OUTPUT"
+          fi
 
       - name: Set up Python
         uses: actions/setup-python@v5
@@ -53,6 +83,7 @@ jobs:
         run: |
           robot \
             --variable HEADLESS:True \
+            --include ${{ steps.tag.outputs.value }} \
             --outputdir results \
             --xunit xunit.xml \
             tests/
@@ -61,14 +92,21 @@ jobs:
         # global_page.resource's "New Browser" keyword (CLI --variable takes
         # precedence over the *** Variables *** default), so the suite runs
         # headless in CI while local runs keep the resource's own default.
+        # --include filters by [Tags]: "smoke" is the small, fast,
+        # critical-path subset run on every PR; "regression" covers the
+        # whole suite (every test carries it) and runs on merges to main
+        # and the nightly schedule.
 
       - name: Publish summary on GitHub Actions
         if: always()
         run: |
           {
             echo "### Robot Framework Suite Result"
+            echo "Tag executed: \`${{ steps.tag.outputs.value }}\`"
             if [ -f results/output.xml ]; then
-              echo "Full report available in the **robot-framework-results** artifact."
+              echo "Full report (including the **Statistics by Tag** breakdown"
+              echo "for smoke/regression/critical/high/medium and ui) is"
+              echo "available in the **robot-framework-results** artifact."
             fi
           } >> "$GITHUB_STEP_SUMMARY"
 

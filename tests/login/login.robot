@@ -13,7 +13,7 @@ Test Teardown    Cleanup Login Test
 User With Valid Credentials Should Be Redirected To The Home
     [Documentation]    A user who enters a valid email and password and clicks
     ...                "Entrar" must be redirected to the home page.
-    [Tags]    login    smoke
+    [Tags]    login    ui    smoke    regression    critical
     Given a user is trying to login
     When this user types the email    ${EMAIL}
     And this user types the password    ${PASSWORD}
@@ -22,7 +22,7 @@ User With Valid Credentials Should Be Redirected To The Home
 
 Admin Can Access Admin Page
     [Documentation]    This test case verifies that an admin user can access the admin page.
-    [Tags]    admin    smoke
+    [Tags]    admin    login    ui    smoke    regression    critical
     Given the admin user wants to access the admin page   
     When this admin user types the email and password
     Then the admin page should be displayed
@@ -31,7 +31,7 @@ User With Invalid Email Should See Error Message
     [Documentation]    A user who enters an invalid email and/or password and clicks
     ...                "Entrar" must see a message informing that the
     ...                credentials are invalid.
-    [Tags]    login
+    [Tags]    login    ui    regression    medium
     Given a user is trying to login
     When this user types the email    email.invalido@qa.com.br
     And this user types the password    ${PASSWORD}
@@ -42,7 +42,7 @@ User With Invalid Password Should See Error Message
     [Documentation]    A user who enters an invalid email and/or password and clicks
     ...                "Entrar" must see a message informing that the
     ...                credentials are invalid.
-    [Tags]    login
+    [Tags]    login    ui    regression    medium
     Given a user is trying to login
     When this user types the email    ${EMAIL}
     And this user types the password    senhaInvalida123
@@ -53,7 +53,7 @@ User With Blank Email Should See Error Message
     [Documentation]    A user who enters an invalid email and/or password and clicks
     ...                "Entrar" must see a message informing that the
     ...                credentials are invalid.
-    [Tags]    login
+    [Tags]    login    ui    regression    medium
     Given a user is trying to login
     When this user types the password     ${PASSWORD}
     And clicks on Entrar
@@ -63,7 +63,7 @@ User With Blank Password Should See Error Message
     [Documentation]    A user who enters an invalid email and/or password and clicks
     ...                "Entrar" must see a message informing that the
     ...                credentials are invalid.
-    [Tags]    login
+    [Tags]    login    ui    regression    medium
     Given a user is trying to login
     When this user types the email    ${EMAIL}
     And clicks on Entrar
@@ -72,7 +72,7 @@ User With Blank Password Should See Error Message
 User With Invalid Email Format Should See Error Message
     [Documentation]    A user who enters a valid email and password and clicks
     ...                "Entrar" must be redirected to the home page.
-    [Tags]    login    smoke
+    [Tags]    login    ui    regression    medium
     Given a user is trying to login
     When this user types the email    teste@teste
     And this user types the password    ${PASSWORD}

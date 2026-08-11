@@ -10,7 +10,7 @@ Test Teardown    Cleanup Login Test
 *** Test Cases ***
 User Can Add 2 Items to List
     [Documentation]    This test case verifies that a user can add two items to the list.
-    [Tags]    list    smoke
+    [Tags]    store    list    ui    smoke    regression    critical
     Given the user wants to add 2 items to the list   
     When the user adds the first item to the list   Logitech MX Vertical
     And the user adds the second item to the list   Samsung 60 polegadas
@@ -18,7 +18,7 @@ User Can Add 2 Items to List
 
 User Can Increase Quantity of an Item in the List
     [Documentation]    This test case verifies that a user can increase the quantity of an item in the list.
-    [Tags]    list    smoke
+    [Tags]    store    list    ui    regression    high
     Given the user wants to increase item in the list   
     When the user adds an item to the list   Logitech MX Vertical
     And the user increases the quantity of the item in the list
@@ -26,7 +26,7 @@ User Can Increase Quantity of an Item in the List
 
 User Can Clear the List
     [Documentation]    This test case verifies that a user can clear the list.
-    [Tags]    list    smoke
+    [Tags]    store    list    ui    regression    high
     Given the user wants to clear the list   
     When the user adds an item to the list   Logitech MX Vertical
     And the user clears the list

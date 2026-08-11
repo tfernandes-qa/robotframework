@@ -11,7 +11,7 @@ Test Teardown    Cleanup Login Test
 *** Test Cases ***
 Admin Wants To Create a New User
     [Documentation]    This test case verifies that an admin can create a new user.
-    [Tags]    admin    smoke
+    [Tags]    admin    ui    smoke    regression    critical
     ${name}    ${email}    ${password}=    Generate Random User
     Given the admin wants to create a new user   
     When the admin clicks on the "Cadastrar" button on the Cadastro de Usuário card
@@ -21,14 +21,14 @@ Admin Wants To Create a New User
 
 Admin Wants To See The List Of Users
     [Documentation]    This test case verifies that an admin can see the list of users.
-    [Tags]    admin    smoke
+    [Tags]    admin    ui    regression    high
     Given the admin wants to see the list of users
     When the admin clicks on the "Listar" button on the Listar Usuários card
     Then the list of users should be displayed
 
 Admin Wants To Create A New Product
     [Documentation]    This test case verifies that an admin can create a new product.
-    [Tags]    admin    smoke
+    [Tags]    admin    ui    smoke    regression    critical
     ${productName}      ${price}    ${description}      ${quantity}=    Generate Random Product
     Given the admin wants to create a new product
     When the admin clicks on the "Cadastrar" button on the Cadastrar Produtos card
@@ -38,7 +38,7 @@ Admin Wants To Create A New Product
 
 Admin Wants To List All Products
     [Documentation]    This test case verifies that an admin can see the list of products.
-    [Tags]    admin    smoke
+    [Tags]    admin    ui    regression    high
     Given the admin wants to see the list of products
     When the admin clicks on the "Listar" button on the Listar Produtos card
     Then the list of products should be displayed

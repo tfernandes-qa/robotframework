@@ -1,5 +1,5 @@
 *** Settings ***
-Documentation    Page object for the login screen (${BASE_URL}/login).
+Documentation    Page object for the store page.
 Resource         ../variables/global.resource
 
 *** Variables ***
@@ -41,6 +41,9 @@ Item Should Be Increased
     ${xpath}=    Set Variable
     ...    //div[@id='root']/div[@class='App']/div/div[@class='jumbotron']/div[@class='container-fluid']/div/section[@class='row espacamento']/div[@class='card col-3'][1]/div[@class='card-body']/div[@class='row']/div[@class='col-3'][2]/p
     Wait For Elements State    xpath=${xpath}    visible    timeout=10s
+    ${quantity_txt}=    Get Text    xpath=${xpath}
+    ${quantity}=    Convert To Integer    ${quantity_txt}
+    Should be True    ${quantity} > 1    msg=Expected quantity to be greater than 1, but got ${quantity}.
 
 List Should Be Empty
     [Documentation]    Verifies that the shopping list is empty.

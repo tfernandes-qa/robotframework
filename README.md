@@ -264,17 +264,50 @@ button on the Cadastro de Usuário card`), which simply delegate to the
 `newUser_page.resource` / `newProduct_page.resource` / `home_page.resource`
 keywords described above.
 
+## Tags
+
+Every test case carries three kinds of `[Tags]`, so the suite can be sliced
+without touching test code:
+
+| Dimension        | Tags                              | Meaning |
+|-------------------|------------------------------------|---------|
+| **Execution set**  | `smoke`, `regression`             | `regression` is on every test (the full suite). `smoke` marks the small, fast subset of critical happy paths — currently 5 of the 14 tests — meant to run on every PR for quick feedback. |
+| **Criticality**    | `critical`, `high`, `medium`      | `critical` = core journeys the app is unusable without (login, admin create user/product, add to cart). `high` = important supporting flows (listing, quantity, clearing). `medium` = negative/validation edge cases. |
+| **Layer**          | `ui`                               | All current tests drive the browser end-to-end (API is only used for setup/teardown). Kept as an explicit tag so future API-only suites can be filtered out (`--exclude ui`) or in (`--include ui`) separately. |
+
+Module tags (`login`, `admin`, `store`/`list`) are also kept so a single
+feature area can be run in isolation, e.g. `robot --include admin tests/`.
+
+Tags are combinable, e.g. run every critical test regardless of area:
+
+```bash
+robot --include critical tests/
+```
+
+Robot Framework's `report.html` automatically breaks down pass/fail stats
+per tag ("Statistics by Tag") with no extra flags required — once the tags
+above are applied, that view already gives a success rate by criticality
+(`critical`/`high`/`medium`) for free, which is what gets reported to
+stakeholders.
+
 ## Continuous Integration
 
-`.github/workflows/robot-tests.yml` runs the full suite on GitHub Actions:
+`.github/workflows/robot-tests.yml` runs the suite on GitHub Actions, using
+tags to control how much of it runs per trigger:
 
-- **Triggers**: pull requests and pushes to `main`, plus manual runs via
-  `workflow_dispatch`. Runs are cancelled/deduped per branch (`concurrency`).
+- **Triggers**:
+  - `pull_request` to `main` → runs `--include smoke` only, for fast PR
+    feedback.
+  - `push` to `main` and a nightly `schedule` (03:00 UTC) → run
+    `--include regression`, the full suite.
+  - `workflow_dispatch` → manual run with a `tag` input (`smoke` or
+    `regression`, defaults to `regression`).
+  - Runs are cancelled/deduped per branch (`concurrency`).
 - Sets up Python and Node.js (the Browser library driver needs Node),
   installs `requirements.txt`, and runs `rfbrowser init` (with the
   downloaded Playwright browsers cached across runs).
-- Executes `robot --outputdir results --xunit xunit.xml tests/`; the job
-  fails if any test fails.
+- Executes `robot --include <tag> --outputdir results --xunit xunit.xml
+  tests/`; the job fails if any test fails.
 - Uploads `log.html`, `report.html`, and `output.xml` as the
   `robot-framework-results` artifact, and `xunit.xml` as the
   `robot-junit-report` artifact (both kept for 15 days), and writes a short

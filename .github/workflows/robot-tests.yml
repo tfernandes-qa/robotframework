@@ -9,8 +9,8 @@ on:
   # To turn it back on: uncomment the two lines below and merge this file
   # into `main` (GitHub only reads `schedule` triggers from the workflow
   # file version on the repo's default branch, not from feature branches).
-  schedule:
-    - cron: '0 3 * * *'   # 03:00 UTC = 00:00 (midnight) in Brasília
+  # schedule:
+  #   - cron: '0 3 * * *'   # 03:00 UTC = 00:00 (midnight) in Brasília
   workflow_dispatch:        # allows manual trigger from the Actions tab
     inputs:
       tag:
@@ -39,7 +39,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Determine which tag to run
         id: tag
@@ -57,13 +57,13 @@ jobs:
           fi
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
           cache: 'pip'
 
       - name: Set up Node.js (required by the Browser library driver)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
 
@@ -73,7 +73,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -125,7 +125,7 @@ jobs:
 
       - name: Upload artifacts (log.html, report.html, output.xml)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: robot-framework-results
           path: results/
@@ -133,7 +133,7 @@ jobs:
 
       - name: Upload JUnit/xUnit report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: robot-junit-report
           path: results/xunit.xml
@@ -151,12 +151,23 @@ jobs:
         if: always()
         run: npm install -g allure-commandline
 
-      # Retrieves the history of previous runs from the gh-pages branch.
-      # continue-on-error covers the first run, when the branch does not exist yet.
-      - name: Get Allure history
+      # Checks whether gh-pages exists yet (it won't on the very first run,
+      # before any deploy to Pages has happened), to skip the checkout below
+      # cleanly instead of letting it fail with retries.
+      - name: Check if gh-pages branch exists
         if: always()
-        continue-on-error: true
-        uses: actions/checkout@v4
+        id: gh-pages-check
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Retrieves the history of previous runs from the gh-pages branch.
+      - name: Get Allure history
+        if: always() && steps.gh-pages-check.outputs.exists == 'true'
+        uses: actions/checkout@v5
         with:
           ref: gh-pages
           path: gh-pages
@@ -165,8 +176,12 @@ jobs:
       # the Allure CLI picks it up and renders the trend graphs.
       - name: Restore Allure history
         if: always()
-        continue-on-error: true
-        run: cp -r gh-pages/history allure-results/history
+        run: |
+          if [ -d "gh-pages/history" ]; then
+            cp -r gh-pages/history allure-results/history
+          else
+            echo "No previous history found (gh-pages branch or history/ folder doesn't exist yet) — skipping."
+          fi
 
       - name: Generate Allure report with history
         if: always()
@@ -186,7 +201,7 @@ jobs:
       # On PRs, the Allure report is made available as a run artifact.
       - name: Upload Allure report artifact (PRs)
         if: always() && github.event_name == 'pull_request'
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: allure-report
           path: allure-report/
@@ -202,7 +217,7 @@ jobs:
 
       - name: Send Allure report by email
         if: always()
-        uses: dawidd6/action-send-mail@v4
+        uses: dawidd6/action-send-mail@v14
         with:
           server_address: ${{ secrets.MAIL_SERVER }}
           server_port: 465

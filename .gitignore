@@ -8,3 +8,9 @@ report.html
 output.xml
 playwright-log.txt
 browser/traces/
+
+# Allure
+allure-results/
+allure-report/
+allure-history/
+gh-pages/

@@ -2,3 +2,4 @@ robotframework
 robotframework-browser
 robotframework-requests
 Faker==26.0.0
+allure-robotframework

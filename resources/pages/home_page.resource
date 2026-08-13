@@ -21,8 +21,8 @@ Home Page Should Be Displayed
     ...                is done via SPA (client-side), asynchronously after
     ...                clicking "Entrar".
     Wait For Elements State    ${LOGOUT_BUTTON}    visible
-    ${current_url}=    Get Url
-    Should Be Equal As Strings    ${current_url}    ${BASE_URL}/home
+    ${CURRENT_URL}=    Get Url
+    Should Be Equal As Strings    ${CURRENT_URL}    ${BASE_URL}/home
 
 Admin Page Should Be Displayed
     [Documentation]    Confirms that the user was redirected to the admin
@@ -32,8 +32,8 @@ Admin Page Should Be Displayed
     ...                is done via SPA (client-side), asynchronously after
     ...                clicking "Entrar".
     Wait For Elements State    ${LOGOUT_BUTTON}    visible
-    ${current_url}=    Get Url
-    Should Be Equal As Strings    ${current_url}    ${BASE_URL}/admin/home
+    ${CURRENT_URL}=    Get Url
+    Should Be Equal As Strings    ${CURRENT_URL}    ${BASE_URL}/admin/home
 
 Click Cadastrar Button On Cadastro De Usuario Card
     [Documentation]    Clicks the "Cadastrar" button on the "Cadastro de Usuario"
@@ -62,3 +62,28 @@ Click Listar Button On Listar Produtos Card
 Products Table Should Be Displayed
     [Documentation]    Confirms that the products table is displayed on the page.
     Wait For Elements State    ${PRODUCTS_TABLE}    visible
+
+Navigate To Admin Home Page
+    [Documentation]    Navigates directly to the admin home page URL, without
+    ...                going through the login form.
+    Go To    ${BASE_URL}/admin/home
+
+Navigate To Home Page
+    [Documentation]    Navigates directly to the regular user home page URL,
+    ...                without going through the login form.
+    Go To    ${BASE_URL}/home
+
+Admin Page Should Not Be Displayed
+    [Documentation]    Confirms that the admin home page is NOT accessible:
+    ...                an admin-only element (the "Cadastrar Usuários" button)
+    ...                must not be visible, and the current URL must not be
+    ...                the admin home URL.
+    ...                KNOWN ISSUE: as of this writing, the ServeRest
+    ...                front-end does not enforce role-based access control —
+    ...                any authenticated user (not only admins) can reach
+    ...                /admin/home. This keyword documents the expected,
+    ...                correct behavior, so it currently fails until that
+    ...                authorization defect is fixed.
+    Wait For Elements State    ${CREATE_USER_BUTTON}    hidden    timeout=5s
+    ${CURRENT_URL}=    Get Url
+    Should Not Be Equal As Strings    ${CURRENT_URL}    ${BASE_URL}/admin/home

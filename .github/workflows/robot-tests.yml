@@ -10,7 +10,7 @@ on:
   # into `main` (GitHub only reads `schedule` triggers from the workflow
   # file version on the repo's default branch, not from feature branches).
   # schedule:
-  #   - cron: '0 3 * * *'   # 03:00 UTC = 00:00 (meia-noite) em Brasília
+  #   - cron: '0 3 * * *'   # 03:00 UTC = 00:00 (midnight) in Brasília
   workflow_dispatch:        # allows manual trigger from the Actions tab
     inputs:
       tag:
@@ -26,6 +26,11 @@ concurrency:
   group: robot-tests-${{ github.ref }}
   cancel-in-progress: true
 
+# Needed by peaceiris/actions-gh-pages to push the Allure report
+# to the gh-pages branch using the default GITHUB_TOKEN.
+permissions:
+  contents: write
+
 jobs:
   robot-tests:
     name: Run Robot Framework Suite
@@ -34,7 +39,7 @@ jobs:
 
     steps:
       - name: Checkout code
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
 
       - name: Determine which tag to run
         id: tag
@@ -52,13 +57,13 @@ jobs:
           fi
 
       - name: Set up Python
-        uses: actions/setup-python@v5
+        uses: actions/setup-python@v6
         with:
           python-version: '3.11'
           cache: 'pip'
 
       - name: Set up Node.js (required by the Browser library driver)
-        uses: actions/setup-node@v4
+        uses: actions/setup-node@v6
         with:
           node-version: '22'
 
@@ -68,7 +73,7 @@ jobs:
           pip install -r requirements.txt
 
       - name: Cache Playwright browsers
-        uses: actions/cache@v4
+        uses: actions/cache@v5
         id: playwright-cache
         with:
           path: ~/.cache/ms-playwright
@@ -82,6 +87,7 @@ jobs:
       - name: Run Robot Framework tests
         run: |
           robot \
+            --listener allure_robotframework:allure-results \
             --variable HEADLESS:True \
             --include ${{ steps.tag.outputs.value }} \
             --outputdir results \
@@ -96,6 +102,9 @@ jobs:
         # critical-path subset run on every PR; "regression" covers the
         # whole suite (every test carries it) and runs on merges to main
         # and the nightly schedule.
+        # --listener allure_robotframework writes the raw Allure data to
+        # allure-results/ (at the root of the workspace, outside results/),
+        # which is converted into the HTML report in the steps below.
 
       - name: Publish summary on GitHub Actions
         if: always()
@@ -108,11 +117,15 @@ jobs:
               echo "for smoke/regression/critical/high/medium and ui) is"
               echo "available in the **robot-framework-results** artifact."
             fi
+            if [ "${{ github.ref }}" = "refs/heads/main" ]; then
+              echo ""
+              echo "Allure report (with history): https://tfernandes-qa.github.io/robotframework/"
+            fi
           } >> "$GITHUB_STEP_SUMMARY"
 
       - name: Upload artifacts (log.html, report.html, output.xml)
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: robot-framework-results
           path: results/
@@ -120,8 +133,119 @@ jobs:
 
       - name: Upload JUnit/xUnit report
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: robot-junit-report
-          path: xunit.xml
+          path: results/xunit.xml
           retention-days: 15
+
+      # ---------- Allure ----------
+      #
+      # NOTE: previously used simple-elf/allure-report-action, but that
+      # action's Docker image (openjdk:8-jre-alpine) was removed from
+      # Docker Hub upstream and the action is unmaintained, so the report
+      # generation is now done directly with the Allure CLI (installed via
+      # npm) instead of that action.
+
+      - name: Install Allure CLI
+        if: always()
+        run: npm install -g allure-commandline
+
+      # Checks whether gh-pages exists yet (it won't on the very first run,
+      # before any deploy to Pages has happened), to skip the checkout below
+      # cleanly instead of letting it fail with retries.
+      - name: Check if gh-pages branch exists
+        if: always()
+        id: gh-pages-check
+        run: |
+          if git ls-remote --exit-code --heads origin gh-pages > /dev/null 2>&1; then
+            echo "exists=true" >> "$GITHUB_OUTPUT"
+          else
+            echo "exists=false" >> "$GITHUB_OUTPUT"
+          fi
+
+      # Retrieves the history of previous runs from the gh-pages branch.
+      - name: Get Allure history
+        if: always() && steps.gh-pages-check.outputs.exists == 'true'
+        uses: actions/checkout@v5
+        with:
+          ref: gh-pages
+          path: gh-pages
+
+      # Copies the previous run's history/ folder into allure-results so
+      # the Allure CLI picks it up and renders the trend graphs.
+      - name: Restore Allure history
+        if: always()
+        run: |
+          if [ -d "gh-pages/history" ]; then
+            cp -r gh-pages/history allure-results/history
+          else
+            echo "No previous history found (gh-pages branch or history/ folder doesn't exist yet) — skipping."
+          fi
+
+      - name: Generate Allure report with history
+        if: always()
+        run: allure generate allure-results --clean -o allure-report
+
+      # Publishes to GitHub Pages only on pushes to main (and manual runs on
+      # main), so that PRs with the "smoke" subset don't pollute the official
+      # trend/flaky-test history, which is fed only by the full suite.
+      - name: Deploy Allure report to GitHub Pages
+        if: always() && github.ref == 'refs/heads/main' && github.event_name != 'pull_request'
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_branch: gh-pages
+          publish_dir: allure-report
+
+      # On PRs, the Allure report is made available as a run artifact.
+      - name: Upload Allure report artifact (PRs)
+        if: always() && github.event_name == 'pull_request'
+        uses: actions/upload-artifact@v6
+        with:
+          name: allure-report
+          path: allure-report/
+          retention-days: 15
+
+      # ---------- Email with Allure report ----------
+
+      # Single-file version of the report: a self-contained index.html
+      # that's ideal as an email attachment.
+      - name: Generate single-file Allure report (email attachment)
+        if: always()
+        run: allure generate allure-results --single-file --clean -o allure-single
+
+      - name: Send Allure report by email
+        if: always()
+        uses: dawidd6/action-send-mail@v14
+        with:
+          server_address: ${{ secrets.MAIL_SERVER }}
+          server_port: 465
+          secure: true
+          username: ${{ secrets.MAIL_USERNAME }}
+          password: ${{ secrets.MAIL_PASSWORD }}
+          from: Robot CI <${{ secrets.MAIL_USERNAME }}>
+          to: ${{ secrets.MAIL_TO }}
+          subject: >-
+            [${{ job.status == 'success' && 'PASS' || 'FAIL' }}]
+            Robot ${{ steps.tag.outputs.value }} —
+            ${{ github.repository }} run #${{ github.run_number }}
+          html_body: |
+            <h3>Robot Framework — run result</h3>
+            <p>
+              <b>Status:</b> ${{ job.status }}<br>
+              <b>Suite:</b> ${{ steps.tag.outputs.value }}<br>
+              <b>Event:</b> ${{ github.event_name }}<br>
+              <b>Branch/ref:</b> ${{ github.ref_name }}<br>
+              <b>Commit:</b> ${{ github.sha }}
+            </p>
+            <p>
+              Full Allure report attached (index.html — opens directly in the browser).<br>
+              Run details:
+              <a href="${{ github.server_url }}/${{ github.repository }}/actions/runs/${{ github.run_id }}">
+                run #${{ github.run_number }}
+              </a><br>
+              Published history (main):
+              <a href="https://tfernandes-qa.github.io/robotframework/">tfernandes-qa.github.io/robotframework</a>
+            </p>
+          attachments: allure-single/index.html

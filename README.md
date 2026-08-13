@@ -34,6 +34,7 @@ robotframework/
 ├── requirements.txt
 ├── resources/
 │   ├── api/
+│   │   ├── products_api.resource
 │   │   └── users_api.resource
 │   ├── pages/
 │   │   ├── global_page.resource
@@ -96,6 +97,11 @@ random test data via Faker (`pt_BR` locale):
     the API, for tests that need to reach the admin area.
   - `Cleanup Login Test` — closes the browser and removes, via the API, the
     user created in the setup.
+  - `Invalidate User Session Token` — clears the browser's local storage,
+    simulating an expired or otherwise invalid session.
+  - `Alert Message Should Be` — asserts the generic dismissible alert
+    message shared by several forms across the app (login, new user, new
+    product, ...).
   - `Generate Random User` — returns a random name, email, and password
     (via `Generate Random Password`), using Faker.
   - `Generate Random Password` — generates a random alphanumeric password
@@ -177,20 +183,23 @@ Page object for the admin's "create product" screen. Contains:
 
 Page object for the store/home screen's shopping list feature. Contains:
 
-- **Locators**: `${HOME_BUTTON}`, `${ADD_TO_LIST_BUTTON}`,
+- **Locators**: `${HOME_BUTTON}`, `${INCREASE_BUTTON}`, `${DECREASE_BUTTON}`,
   `${CLEAR_LIST_BUTTON}`, `${CART_LIST_EMPTY}`.
 - **Keywords**:
   - `Back To Home` — clicks the "Página Inicial" button to return to the
     home page.
   - `Clear List` — clicks the button to clear the shopping list.
-  - `Add Item To List` — finds a product card by its name and clicks the
-    button to add it to the shopping list.
+  - `Add Item To List` — finds a product card by its name (built as a
+    dynamic XPath, no fixed locator) and clicks the button to add it to
+    the shopping list.
   - `Item Should Be In List` — verifies that the given product is visible
     in the shopping cart list.
-  - `Increase Quantity of Item in List` — clicks the button to increase the
-    quantity of an item already in the shopping list.
-  - `Item Should Be Increased` — verifies that the quantity of the given
-    product has been increased in the shopping list.
+  - `Increase Quantity of Item in List` / `Decrease Quantity of Item in
+    List` — click the buttons to increase/decrease the quantity of an item
+    already in the shopping list.
+  - `Item Should Be Increased` / `Item Should Be Decreased` — verify that
+    the quantity of the given product went up/down accordingly in the
+    shopping list.
   - `List Should Be Empty` — verifies that the shopping list is empty.
 
 ### `resources/api/users_api.resource`
@@ -206,6 +215,35 @@ through the UI:
   `administrador=true`, so it can log in and reach the admin area.
 - `Delete User Via Api` — deletes the user (by id) created for the test,
   keeping the test environment clean.
+- `Get Users By Email Via Api` — queries all users registered with a given
+  email, returning how many were found and the matching records.
+- `Delete All Users With Email Via Api` — deletes every user registered
+  with a given email. Used to clean up after tests that intentionally
+  create duplicated users (e.g. the double-click and duplicated-email
+  tests), where the id isn't known upfront.
+
+### `resources/api/products_api.resource`
+
+Support keywords that call the ServeRest REST API to prepare and clean up
+test data (products) used by the UI tests. Unlike the user routes, the
+product routes require an admin authorization token:
+
+- `Get Admin Auth Token` — logs in with the given admin credentials and
+  returns the authorization token required by the product creation/deletion
+  routes.
+- `Create Product Via Api` — creates a product with the given fields, using
+  the given admin token, and returns the id of the created product.
+- `Delete Product Via Api` — deletes the product (by id) created for the
+  test, using the given admin token.
+- `Get Products By Name Via Api` — queries all products registered with a
+  given name, returning how many were found and the matching records.
+- `Delete All Products With Name Via Api` — deletes every product
+  registered with a given name, using the given admin token. Used to clean
+  up after tests that intentionally create duplicated products.
+- `Cleanup Product By Name Via Api` — obtains a fresh admin token with the
+  given credentials and removes every product registered with a given
+  name. Used to clean up after tests that create a product through the UI,
+  where no product id is known.
 
 ### `tests/login/login.robot`
 
@@ -229,13 +267,32 @@ to the page object keywords described above.
 ### `tests/store/store.robot`
 
 Test suite covering the shopping list on the ServeRest store/home page. It
-reuses `Prepare Login Test`/`Cleanup Login Test` (via `Open Browser To Home
-Page`) to log in as a fresh API-created user before each test, then drives
-the store page object to run scenarios such as:
+reuses `Prepare Login Test` (via `Open Browser To Home Page`) to log in as a
+fresh API-created shopper user before each test, then drives the store page
+object to run scenarios such as:
 
 - Adding two items to the shopping list.
-- Increasing the quantity of an item already in the list.
 - Clearing the shopping list.
+- Increasing/decreasing the quantity of an item already in the list.
+
+Each `Given` step creates its own product(s) via the API (`Create Admin
+User Via Api` + `Get Admin Auth Token` + `Create Product Via Api`, with a
+Faker word name suffixed with a random string for uniqueness) instead of
+relying on fixed catalog items, since the ServeRest catalog is a public,
+shared demo environment where fixed product names can collide with
+clutter created by other students/QA courses (this was observed in
+practice: a duplicated "Logitech MX Vertical" card broke a locator in
+strict mode). Because the store/home page has already loaded before the
+`Given` step runs, it calls Browser library's `Reload` afterwards so the
+newly created product's card appears before the `When` steps interact
+with it.
+
+Each test case defines its own `[Teardown]`, chained with `AND` onto
+`Cleanup Login Test`, to delete the product(s) and the temporary admin
+user created for setup — a local `[Teardown]` replaces the suite's `Test
+Teardown` rather than running in addition to it, so `Cleanup Login Test`
+must be included explicitly in every custom teardown, or the browser
+never closes and the shopper user is never deleted.
 
 The `*** Keywords ***` section of this file defines the Given/When/Then
 style keywords used by the test cases (e.g. `the user adds the first item to
@@ -256,6 +313,26 @@ scenarios such as:
 - Creating a new product with randomly generated data (via `Generate
   Random Product`) and confirming it appears in the products table.
 - Listing all products and confirming the products table is displayed.
+- An admin user being able to access the regular user's home page (store)
+  directly, without being blocked.
+- The admin not being able to create a user or a product with a name/email
+  that already exists (negative cases), asserting the corresponding error
+  message.
+- Double-clicking the submit button on the new user form not creating two
+  duplicated users.
+
+The five tests above that create extra data (new user, new product, the
+two "cannot create duplicated ..." cases, and the double-click case) each
+define their own `[Teardown]`, chained with `AND`
+onto `Cleanup Login Test`, to delete that data via the API (e.g. `Delete
+User Via Api`, `Delete All Users With Email Via Api`, `Cleanup Product By
+Name Via Api`). A local `[Teardown]` replaces the suite's `Test Teardown`
+instead of running in addition to it, so `Cleanup Login Test` has to be
+included explicitly every time — and because `Run Keywords` only chains
+multiple keywords when they're separated with `AND` (a single keyword
+passed to it gets its arguments misread as more keyword names to run), a
+teardown that runs just one cleanup keyword must call it directly instead
+of wrapping it in `Run Keywords`.
 
 The `*** Keywords ***` section of this file defines the Given/When/Then
 style keywords used by the test cases (e.g. `the admin fills in the user
@@ -271,7 +348,7 @@ without touching test code:
 
 | Dimension        | Tags                              | Meaning |
 |-------------------|------------------------------------|---------|
-| **Execution set**  | `smoke`, `regression`             | `regression` is on every test (the full suite). `smoke` marks the small, fast subset of critical happy paths — currently 5 of the 14 tests — meant to run on every PR for quick feedback. |
+| **Execution set**  | `smoke`, `regression`             | `regression` is on every test (the full suite). `smoke` marks the small, fast subset of critical happy paths — currently 5 of the 21 tests — meant to run on every PR for quick feedback. |
 | **Criticality**    | `critical`, `high`, `medium`      | `critical` = core journeys the app is unusable without (login, admin create user/product, add to cart). `high` = important supporting flows (listing, quantity, clearing). `medium` = negative/validation edge cases. |
 | **Layer**          | `ui`                               | All current tests drive the browser end-to-end (API is only used for setup/teardown). Kept as an explicit tag so future API-only suites can be filtered out (`--exclude ui`) or in (`--include ui`) separately. |
 

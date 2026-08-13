@@ -23,7 +23,7 @@ User With Valid Credentials Should Be Redirected To The Home
 Admin Can Access Admin Page
     [Documentation]    This test case verifies that an admin user can access the admin page.
     [Tags]    admin    login    ui    smoke    regression    critical
-    Given the admin user wants to access the admin page   
+    Given the admin user wants to access the admin page
     When this admin user types the email and password
     Then the admin page should be displayed
 
@@ -108,12 +108,12 @@ a user is trying to login
     No Operation
 
 this user types the email
-    [Arguments]    ${email}
-    Input Email    ${email}
+    [Arguments]    ${EMAIL}
+    Input Email    ${EMAIL}
 
 this user types the password
-    [Arguments]    ${password}
-    Input Password    ${password}
+    [Arguments]    ${PASSWORD}
+    Input Password    ${PASSWORD}
 
 clicks on Entrar
     Click Entrar Button
@@ -121,15 +121,15 @@ clicks on Entrar
 this user must be redirected to the home page
     Home Page Should Be Displayed
 
-the message "${message}" must appear
-    Login Error Message Should Be    ${message}
+the message "${MESSAGE}" must appear
+    Login Error Message Should Be    ${MESSAGE}
 
 the admin user wants to access the admin page
     Prepare Admin Login Test
 
 this admin user types the email and password
-    Input Email    ${email}
-    Input Password    ${password}
+    Input Email    ${EMAIL}
+    Input Password    ${PASSWORD}
     Click Entrar Button
 
 the admin page should be displayed

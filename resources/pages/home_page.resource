@@ -21,8 +21,8 @@ Home Page Should Be Displayed
     ...                is done via SPA (client-side), asynchronously after
     ...                clicking "Entrar".
     Wait For Elements State    ${LOGOUT_BUTTON}    visible
-    ${current_url}=    Get Url
-    Should Be Equal As Strings    ${current_url}    ${BASE_URL}/home
+    ${CURRENT_URL}=    Get Url
+    Should Be Equal As Strings    ${CURRENT_URL}    ${BASE_URL}/home
 
 Admin Page Should Be Displayed
     [Documentation]    Confirms that the user was redirected to the admin
@@ -32,8 +32,8 @@ Admin Page Should Be Displayed
     ...                is done via SPA (client-side), asynchronously after
     ...                clicking "Entrar".
     Wait For Elements State    ${LOGOUT_BUTTON}    visible
-    ${current_url}=    Get Url
-    Should Be Equal As Strings    ${current_url}    ${BASE_URL}/admin/home
+    ${CURRENT_URL}=    Get Url
+    Should Be Equal As Strings    ${CURRENT_URL}    ${BASE_URL}/admin/home
 
 Click Cadastrar Button On Cadastro De Usuario Card
     [Documentation]    Clicks the "Cadastrar" button on the "Cadastro de Usuario"
@@ -85,5 +85,5 @@ Admin Page Should Not Be Displayed
     ...                correct behavior, so it currently fails until that
     ...                authorization defect is fixed.
     Wait For Elements State    ${CREATE_USER_BUTTON}    hidden    timeout=5s
-    ${current_url}=    Get Url
-    Should Not Be Equal As Strings    ${current_url}    ${BASE_URL}/admin/home
+    ${CURRENT_URL}=    Get Url
+    Should Not Be Equal As Strings    ${CURRENT_URL}    ${BASE_URL}/admin/home

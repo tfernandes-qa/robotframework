@@ -28,6 +28,13 @@ Click Cadastrar Button
     [Documentation]    Clicks the "Cadastrar" button to submit the new user registration form.
     Click    ${NEW_USER_CADASTRAR_BUTTON}
 
+Double Click Cadastrar Button
+    [Documentation]    Double-clicks the "Cadastrar" button on the new user
+    ...                registration form (submitting it twice in rapid
+    ...                succession), to verify the form does not create
+    ...                duplicated users when submitted twice.
+    Click With Options    ${NEW_USER_CADASTRAR_BUTTON}    left    clickCount=2
+
 User Should Be Created
     [Documentation]    Confirms that the user was created successfully by
     ...                checking for a success message on the screen.

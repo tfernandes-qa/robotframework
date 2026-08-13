@@ -41,3 +41,24 @@ Delete User Via Api
     ...                the environment's test data clean.
     [Arguments]    ${user_id}
     DELETE    ${API_BASE_URL}/usuarios/${user_id}    expected_status=200
+
+Get Users By Email Via Api
+    [Documentation]    Queries, via API, all users registered with the given
+    ...                email, returning how many were found and the list of
+    ...                matching user records.
+    [Arguments]    ${email}
+    ${params}=    Create Dictionary    email=${email}
+    ${response}=    GET    ${API_BASE_URL}/usuarios    params=${params}    expected_status=200
+    ${quantity}=    Set Variable    ${response.json()}[quantidade]
+    ${users}=    Set Variable    ${response.json()}[usuarios]
+    RETURN    ${quantity}    ${users}
+
+Delete All Users With Email Via Api
+    [Documentation]    Removes, via API, every user registered with the given
+    ...                email. Used to clean up after tests that intentionally
+    ...                try to create duplicated users.
+    [Arguments]    ${email}
+    ${quantity}    ${users}=    Get Users By Email Via Api    ${email}
+    FOR    ${user}    IN    @{users}
+        Delete User Via Api    ${user}[_id]
+    END

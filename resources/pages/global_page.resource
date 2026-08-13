@@ -5,6 +5,7 @@ Resource         ../variables/global.resource
 Resource         ../../resources/api/users_api.resource
 
 *** Variables ***
+${ALERT_MESSAGE}    .alert-dismissible > span
 
 
 *** Keywords ***
@@ -36,6 +37,22 @@ Cleanup Login Test
     [Documentation]    Closes the browser and removes, via API, the user created in the setup.
     Close Browser
     Delete User Via Api    ${USER_ID}
+
+Invalidate User Session Token
+    [Documentation]    Clears the browser's local storage, invalidating the
+    ...                logged in user's session token, to simulate an
+    ...                expired or otherwise invalid session.
+    LocalStorage Clear
+
+Alert Message Should Be
+    [Documentation]    Confirms that the alert message displayed on the
+    ...                current page matches the expected one. Several forms
+    ...                across the app (login, new user, new product, ...)
+    ...                share this same generic dismissible alert component.
+    [Arguments]    ${expected_message}
+    Wait For Elements State    ${ALERT_MESSAGE}    visible
+    ${actual_message}=    Get Text    ${ALERT_MESSAGE}
+    Should Be Equal As Strings    ${actual_message}    ${expected_message}
 
 Generate Random User
     [Documentation]    Return name, email and password using Faker (pt_BR)

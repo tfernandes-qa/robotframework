@@ -31,3 +31,12 @@ Login Error Message Should Be
     Wait For Elements State    ${LOGIN_ERROR_MESSAGE}    visible
     ${actual_message}=    Get Text    ${LOGIN_ERROR_MESSAGE}
     Should Be Equal As Strings    ${actual_message}    ${expected_message}
+
+Login Page Should Be Displayed
+    [Documentation]    Confirms that the user was redirected to the login
+    ...                page (e.g. after trying to access a protected page
+    ...                with an expired or invalid session), by waiting for
+    ...                the email field and checking the current URL.
+    Wait For Elements State    ${EMAIL_INPUT}    visible
+    ${current_url}=    Get Url
+    Should Be Equal As Strings    ${current_url}    ${BASE_URL}/login

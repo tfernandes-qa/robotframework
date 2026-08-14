@@ -1,5 +1,6 @@
 robotframework
 robotframework-browser
 robotframework-requests
+robotframework-pabot
 Faker==26.0.0
 allure-robotframework

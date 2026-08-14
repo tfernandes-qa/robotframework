@@ -5,12 +5,12 @@ on:
     branches: [ main ]
   push:
     branches: [ main ]
-  # Nightly full regression run — DISABLED for now.
-  # To turn it back on: uncomment the two lines below and merge this file
+  # Nightly full regression run — ENABLED for now.
+  # To turn it back off: comment the two lines below and merge this file
   # into `main` (GitHub only reads `schedule` triggers from the workflow
   # file version on the repo's default branch, not from feature branches).
-  # schedule:
-  #   - cron: '0 3 * * *'   # 03:00 UTC = 00:00 (midnight) in Brasília
+  schedule:
+    - cron: '0 3 * * *'  # 03:00 UTC = 00:00 (midnight) in Brasília
   workflow_dispatch:        # allows manual trigger from the Actions tab
     inputs:
       tag:

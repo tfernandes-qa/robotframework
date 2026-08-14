@@ -1,46 +1,46 @@
 "DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
-"A user who enters a valid email and password and clicks
-""Entrar"" must be redirected to the home page.","1152","User With Valid Credentials Should Be Redirected To The Home","Tests","2026-08-13","passed","2026-08-13","Login","Login","",""
-"A logged in user whose session token becomes invalid
-and who then tries to reach the admin home page must
-be redirected back to the login page.","1641","User With Invalidated Session Should Be Redirected To The Login Page","Tests","2026-08-13","passed","2026-08-13","Login","Login","",""
-"A user who enters an invalid email and/or password and clicks
-""Entrar"" must see a message informing that the
-credentials are invalid.","1103","User With Invalid Email Should See Error Message","Tests","2026-08-13","passed","2026-08-13","Login","Login","",""
-"A user who enters a valid email and password and clicks
-""Entrar"" must be redirected to the home page.","1092","User With Invalid Email Format Should See Error Message","Tests","2026-08-13","passed","2026-08-13","Login","Login","",""
-"This test case verifies that a user can add two items to the list.","2495","User Can Add 2 Items to List","Tests","2026-08-13","passed","2026-08-13","Store","Store","",""
-"This test case verifies that an admin can create a new product.","2536","Admin Wants To Create A New Product","Tests","2026-08-13","passed","2026-08-13","Admin","Admin","",""
-"This test case verifies that an admin user, who holds
-higher privileges, can also access the regular user's
-home page (store) directly, without being blocked.","1479","Admin Can Access The Regular User Home Page","Tests","2026-08-13","passed","2026-08-13","Admin","Admin","",""
-"This test case verifies that an admin can create a new user.","4637","Admin Wants To Create a New User","Tests","2026-08-13","passed","2026-08-13","Admin","Admin","",""
-"This test case verifies that an admin user can access the admin page.","1564","Admin Can Access Admin Page","Tests","2026-08-13","passed","2026-08-13","Login","Login","",""
-"This test case verifies that the admin cannot create
-a new product using a name that is already registered.","1854","Admin Cannot Create Product With Duplicated Name","Tests","2026-08-13","passed","2026-08-13","Admin","Admin","",""
-"This test case verifies that an admin can see the list of users.","1323","Admin Wants To See The List Of Users","Tests","2026-08-13","passed","2026-08-13","Admin","Admin","",""
-"This test case verifies that an admin can see the list of products.","1369","Admin Wants To List All Products","Tests","2026-08-13","passed","2026-08-13","Admin","Admin","",""
-"This test case verifies that double-clicking the
-""Cadastrar"" button on the new user registration form
-does not create two users with the same data.","2608","Double Click On Submit Should Not Create Duplicated User","Tests","2026-08-13","passed","2026-08-13","Admin","Admin","",""
-"A user who enters an invalid email and/or password and clicks
-""Entrar"" must see a message informing that the
-credentials are invalid.","1047","User With Blank Password Should See Error Message","Tests","2026-08-13","passed","2026-08-13","Login","Login","",""
-"This test case verifies that a user can increase the quantity of an item in the list.","2061","User Can Increase Quantity of an Item in the List","Tests","2026-08-13","passed","2026-08-13","Store","Store","",""
-"This test case verifies that the admin cannot create
-a new user using an email that is already registered.","1705","Admin Cannot Create User With Duplicated Email","Tests","2026-08-13","passed","2026-08-13","Admin","Admin","",""
-"A user who enters an invalid email and/or password and clicks
-""Entrar"" must see a message informing that the
-credentials are invalid.","1071","User With Invalid Password Should See Error Message","Tests","2026-08-13","passed","2026-08-13","Login","Login","",""
-"A user who enters an invalid email and/or password and clicks
-""Entrar"" must see a message informing that the
-credentials are invalid.","1052","User With Blank Email Should See Error Message","Tests","2026-08-13","passed","2026-08-13","Login","Login","",""
-"This test case verifies that a user can decrease the quantity of an item in the list.","2082","User Can Decrease Quantity of an Item in the List","Tests","2026-08-13","passed","2026-08-13","Store","Store","",""
 "A logged in regular (non-admin) user who navigates
 directly to the admin home URL must not see the admin
 page and must be redirected to their own home page.
 KNOWN ISSUE: the ServeRest front-end currently does
 not enforce this restriction (see `Admin Page Should
 Not Be Displayed`), so this test is expected to fail
-until that authorization defect is fixed.","6474","Regular User Should Not Be Able To Access The Admin Home Page","Tests","2026-08-13","failed","2026-08-13","Login","Login","",""
-"This test case verifies that a user can clear the list.","2710","User Can Clear the List","Tests","2026-08-13","passed","2026-08-13","Store","Store","",""
+until that authorization defect is fixed.","6960","Regular User Should Not Be Able To Access The Admin Home Page","Tests","2026-08-14","failed","2026-08-14","Login","Login","",""
+"This test case verifies that an admin can create a new product.","2694","Admin Wants To Create A New Product","Tests","2026-08-14","passed","2026-08-14","Admin","Admin","",""
+"A user who enters an invalid email and/or password and clicks
+""Entrar"" must see a message informing that the
+credentials are invalid.","1687","User With Invalid Email Should See Error Message","Tests","2026-08-14","passed","2026-08-14","Login","Login","",""
+"This test case verifies that an admin user can access the admin page.","3126","Admin Can Access Admin Page","Tests","2026-08-14","passed","2026-08-14","Login","Login","",""
+"A logged in user whose session token becomes invalid
+and who then tries to reach the admin home page must
+be redirected back to the login page.","2102","User With Invalidated Session Should Be Redirected To The Login Page","Tests","2026-08-14","passed","2026-08-14","Login","Login","",""
+"This test case verifies that a user can clear the list.","2892","User Can Clear the List","Tests","2026-08-14","passed","2026-08-14","Store","Store","",""
+"This test case verifies that an admin can create a new user.","7281","Admin Wants To Create a New User","Tests","2026-08-14","passed","2026-08-14","Admin","Admin","",""
+"A user who enters a valid email and password and clicks
+""Entrar"" must be redirected to the home page.","1598","User With Invalid Email Format Should See Error Message","Tests","2026-08-14","passed","2026-08-14","Login","Login","",""
+"A user who enters a valid email and password and clicks
+""Entrar"" must be redirected to the home page.","5846","User With Valid Credentials Should Be Redirected To The Home","Tests","2026-08-14","passed","2026-08-14","Login","Login","",""
+"A user who enters an invalid email and/or password and clicks
+""Entrar"" must see a message informing that the
+credentials are invalid.","1611","User With Blank Password Should See Error Message","Tests","2026-08-14","passed","2026-08-14","Login","Login","",""
+"A user who enters an invalid email and/or password and clicks
+""Entrar"" must see a message informing that the
+credentials are invalid.","1666","User With Invalid Password Should See Error Message","Tests","2026-08-14","passed","2026-08-14","Login","Login","",""
+"This test case verifies that an admin can see the list of products.","1934","Admin Wants To List All Products","Tests","2026-08-14","passed","2026-08-14","Admin","Admin","",""
+"This test case verifies that a user can add two items to the list.","9001","User Can Add 2 Items to List","Tests","2026-08-14","passed","2026-08-14","Store","Store","",""
+"This test case verifies that the admin cannot create
+a new product using a name that is already registered.","2313","Admin Cannot Create Product With Duplicated Name","Tests","2026-08-14","passed","2026-08-14","Admin","Admin","",""
+"A user who enters an invalid email and/or password and clicks
+""Entrar"" must see a message informing that the
+credentials are invalid.","1549","User With Blank Email Should See Error Message","Tests","2026-08-14","passed","2026-08-14","Login","Login","",""
+"This test case verifies that the admin cannot create
+a new user using an email that is already registered.","2370","Admin Cannot Create User With Duplicated Email","Tests","2026-08-14","passed","2026-08-14","Admin","Admin","",""
+"This test case verifies that an admin user, who holds
+higher privileges, can also access the regular user's
+home page (store) directly, without being blocked.","2111","Admin Can Access The Regular User Home Page","Tests","2026-08-14","passed","2026-08-14","Admin","Admin","",""
+"This test case verifies that an admin can see the list of users.","1808","Admin Wants To See The List Of Users","Tests","2026-08-14","passed","2026-08-14","Admin","Admin","",""
+"This test case verifies that a user can increase the quantity of an item in the list.","2934","User Can Increase Quantity of an Item in the List","Tests","2026-08-14","passed","2026-08-14","Store","Store","",""
+"This test case verifies that a user can decrease the quantity of an item in the list.","3100","User Can Decrease Quantity of an Item in the List","Tests","2026-08-14","passed","2026-08-14","Store","Store","",""
+"This test case verifies that double-clicking the
+""Cadastrar"" button on the new user registration form
+does not create two users with the same data.","2507","Double Click On Submit Should Not Create Duplicated User","Tests","2026-08-14","passed","2026-08-14","Admin","Admin","",""

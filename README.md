@@ -402,3 +402,148 @@ rfbrowser init
 ```bash
 robot -d results tests
 ```
+
+## Running the tests in parallel (Pabot)
+
+[`pabot`](https://pabot.org) (`robotframework-pabot`, included in
+`requirements.txt`) runs each **suite** in its own process. In this project a
+"suite" is one directory under `tests/` — `tests/admin`, `tests/login`,
+`tests/store` — each holding a single `.robot` file, so by default pabot
+parallelizes exactly at that granularity:
+
+- `admin.robot`, `login.robot`, and `store.robot` run **concurrently**, in
+  separate processes — they don't share state (each test creates and tears
+  down its own user/product via the API), so running them side by side is
+  safe.
+- The test cases **inside** each `.robot` file keep running **sequentially**,
+  one after another in that suite's single process.
+
+```bash
+pabot --processes 3 --outputdir results tests
+```
+
+`--processes 3` matches the current number of suites (one process per
+suite is enough since pabot doesn't split further); raising it doesn't buy
+more parallelism today but won't break anything either — it just leaves the
+extra processes idle. Any other `robot` flag (`--include smoke`,
+`--variable HEADLESS:True`, `--listener allure_robotframework:allure-results`,
+...) works the same way with `pabot`.
+
+### Test-level splitting (`--testlevelsplit`)
+
+`--testlevelsplit` makes pabot split *inside* each suite too, so individual
+test cases (not just whole suites) get scheduled onto the process pool. Each
+split test still runs in its own pabot subprocess — its own Python
+interpreter and its own Browser/Playwright driver — so it's just as isolated
+from its sibling tests as suites already are from each other: nothing about
+this project's tests (each of which creates and tears down its own
+user/product via the API) makes them unsafe to run concurrently.
+
+That was verified empirically, not just assumed: across 13 separate
+`--testlevelsplit` runs (all 21 tests split, mixed freely across `admin`,
+`login`, and `store`, at process counts from 3 to 8, several repeated to
+check for flakiness) the only failure that ever showed up was `Regular User
+Should Not Be Able To Access The Admin Home Page`, the pre-existing
+`known-issue` test — the exact same, single failure `--processes 3` alone
+also produces. No data race, no session bleed, no flaky failure caused by
+concurrency ever appeared.
+
+**But it isn't a reliable speed win today, so it isn't the default.** With
+only 3 suites and 4-9 tests each, `--processes 3` already parallelizes as
+much as matters, and splitting further mostly adds per-test process
+start-up overhead (a fresh interpreter + Browser driver per test instead of
+per suite) plus contention between more concurrent Chromium instances than
+the machine has cores for. Measured on an 8-core machine, running the full
+`tests/` tree:
+
+| Command | Runs | Elapsed time (avg) | Spread |
+| --- | --- | --- | --- |
+| `pabot --processes 3 tests` (default, no split) | 4 | **54.1s** | 52.4s – 55.4s (±1.1s) |
+| `pabot --testlevelsplit --processes 3 tests` | 1 | 70.0s | — |
+| `pabot --testlevelsplit --processes 5 tests` | 2 | 64.8s | 56.7s – 72.9s |
+| `pabot --testlevelsplit --processes 6 tests` | 2 | 52.6s | 52.3s – 52.9s |
+| `pabot --testlevelsplit --processes 8 tests` | 4 | 50.8s | 44.9s – 60.9s (±6.4s) |
+
+No process count tested consistently beat the plain `--processes 3` default
+by a reliable margin — the best individual runs did (as fast as 44.9s at
+`--processes 8`), but so did the worst (60.9s, also at `--processes 8`), and
+the average across every split variant (56.5s) actually landed slightly
+*behind* the default's 54.1s. The variance looks driven by the shared,
+third-party ServeRest demo backend's response times more than by local CPU
+contention, which local process-count tuning can't fix. The default's tight
+±1.1s spread makes it the more predictable choice for CI, where a
+consistent run time matters as much as the average.
+
+**When `--testlevelsplit` would earn its keep:** if a single suite grows
+large enough that it — not the number of suites — becomes the bottleneck
+(e.g. `admin.robot` growing from today's 8 tests to 25+), suite-level
+parallelism stays capped at 3 processes no matter how many cores are
+available, while test-level splitting can spread that one suite's tests
+across every core. At that point, split *only* the oversized suite instead
+of the whole `tests/` tree, so the other suites keep running in their own
+dedicated process and you don't reintroduce the run-to-run variance seen
+above:
+
+```bash
+pabot --testlevelsplit --processes 4 --outputdir results tests/admin
+```
+
+For finer control — e.g. splitting just the large suite while still running
+the other suites in the same pabot invocation — pabot supports an
+`--ordering` file that mixes `--suite` lines (suite stays whole) with
+`--test` lines (that suite's tests get split individually), see the
+[pabot docs](https://pabot.org) for the exact syntax.
+
+## Viewing results with Allure
+
+CI already publishes an [Allure](https://allurereport.org/) report for every
+run (see [Continuous Integration](#continuous-integration)); the same report
+can be generated locally.
+
+`allure-robotframework` (already in `requirements.txt`) provides the
+`allure_robotframework` **listener**, which writes Allure's raw result files
+as the suite runs. Turning it on just means adding `--listener` to the
+`robot`/`pabot` command already in use:
+
+```bash
+robot --listener allure_robotframework:allure-results -d results tests
+```
+
+Rendering those raw results into an HTML report additionally requires the
+Allure **command-line tool**, a separate Java-based install (not a Python
+package, so it's not in `requirements.txt`):
+
+```bash
+npm install -g allure-commandline
+```
+
+Then, to build and open the report:
+
+```bash
+# generates the report into allure-report/ and opens it in the browser
+allure serve allure-results
+```
+
+`allure serve` is the quickest option for a one-off local look (it uses a
+temp folder under the hood). To keep the generated report as a file instead
+— e.g. to share it — generate and open it explicitly:
+
+```bash
+allure generate allure-results --clean -o allure-report
+allure open allure-report
+```
+
+Every `robot`/`pabot` run appends new results into `allure-results/` rather
+than replacing it, so a report generated without `--clean` shows the
+accumulated history of every local run, not just the latest one; delete
+`allure-results/` first (or keep using `--clean` when generating) for a
+report scoped to a single run.
+
+The listener works the same way together with `pabot` — each subprocess
+writes its own result files into the same `allure-results/` folder (Allure
+uses one file per test, so parallel writers don't conflict):
+
+```bash
+pabot --processes 3 --listener allure_robotframework:allure-results --outputdir results tests
+allure serve allure-results
+```

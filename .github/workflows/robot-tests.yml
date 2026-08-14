@@ -5,12 +5,12 @@ on:
     branches: [ main ]
   push:
     branches: [ main ]
-  # Nightly full regression run — DISABLED for now.
-  # To turn it back on: uncomment the two lines below and merge this file
+  # Nightly full regression run — ENABLED for now.
+  # To turn it back off: comment the two lines below and merge this file
   # into `main` (GitHub only reads `schedule` triggers from the workflow
   # file version on the repo's default branch, not from feature branches).
-  # schedule:
-  #   - cron: '0 3 * * *'   # 03:00 UTC = 00:00 (midnight) in Brasília
+  schedule:
+    - cron: '0 3 * * *'  # 03:00 UTC = 00:00 (midnight) in Brasília
   workflow_dispatch:        # allows manual trigger from the Actions tab
     inputs:
       tag:
@@ -86,7 +86,8 @@ jobs:
 
       - name: Run Robot Framework tests
         run: |
-          robot \
+          pabot \
+            --processes 3 \
             --listener allure_robotframework:allure-results \
             --variable HEADLESS:True \
             --include ${{ steps.tag.outputs.value }} \
@@ -94,6 +95,9 @@ jobs:
             --xunit xunit.xml \
             tests/
         continue-on-error: false   # PR/merge must fail if any test breaks
+        # pabot runs suites in parallel (--processes 4) instead of robot's
+        # single process; all other flags below behave the same as with
+        # plain `robot`, since pabot is a drop-in wrapper around it.
         # HEADLESS:True overrides the ${HEADLESS} variable used in
         # global_page.resource's "New Browser" keyword (CLI --variable takes
         # precedence over the *** Variables *** default), so the suite runs

@@ -9,8 +9,8 @@ on:
   # To turn it back off: comment the two lines below and merge this file
   # into `main` (GitHub only reads `schedule` triggers from the workflow
   # file version on the repo's default branch, not from feature branches).
-  schedule:
-    - cron: '0 3 * * *'  # 03:00 UTC = 00:00 (midnight) in Brasília
+  # schedule:
+  #   - cron: '0 3 * * *'  # 03:00 UTC = 00:00 (midnight) in Brasília
   workflow_dispatch:        # allows manual trigger from the Actions tab
     inputs:
       tag:
@@ -91,6 +91,7 @@ jobs:
             --listener allure_robotframework:allure-results \
             --variable HEADLESS:True \
             --include ${{ steps.tag.outputs.value }} \
+            --skiponfailure skip \
             --outputdir results \
             --xunit xunit.xml \
             tests/

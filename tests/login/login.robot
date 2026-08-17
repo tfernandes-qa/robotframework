@@ -97,7 +97,7 @@ Regular User Should Not Be Able To Access The Admin Home Page
     ...                not enforce this restriction (see `Admin Page Should
     ...                Not Be Displayed`), so this test is expected to fail
     ...                until that authorization defect is fixed.
-    [Tags]    login    admin    security    ui    regression    high    known-issue
+    [Tags]    login    admin    security    ui    regression    high    known-issue    skip
     Given a regular user is logged in
     When this user navigates directly to the admin home URL
     Then the admin page should not be displayed

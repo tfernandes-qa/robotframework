@@ -91,7 +91,7 @@ jobs:
             --listener allure_robotframework:allure-results \
             --variable HEADLESS:True \
             --include ${{ steps.tag.outputs.value }} \
-            --include skip \
+            --skiponfailure skip \
             --outputdir results \
             --xunit xunit.xml \
             tests/

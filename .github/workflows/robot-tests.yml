@@ -21,6 +21,11 @@ on:
         options:
           - smoke
           - regression
+      run_compat:
+        description: 'Also run the cross-browser compatibility matrix (Firefox/WebKit/Chromium, "compat"-tagged tests only)'
+        required: false
+        default: false
+        type: boolean
 
 concurrency:
   group: robot-tests-${{ github.ref }}
@@ -254,3 +259,71 @@ jobs:
               <a href="https://tfernandes-qa.github.io/robotframework/">tfernandes-qa.github.io/robotframework</a>
             </p>
           attachments: allure-single/index.html
+
+  compat-tests:
+    name: Cross-Browser Compatibility (${{ matrix.browser }})
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    # Opt-in only: triggered by a manual workflow_dispatch run with
+    # "run_compat" checked. Not run on every PR/push — the 12 tests tagged
+    # `compat` already run on Chromium as part of the main `robot-tests`
+    # job (which the "regression"/"smoke" tag always includes them in);
+    # this job's job is specifically to also exercise them on Firefox and
+    # WebKit, which is extra cost worth paying deliberately, not on every
+    # commit. See the "Cross-Browser Compatibility" section of the README
+    # for why this subset and not the full suite.
+    if: github.event_name == 'workflow_dispatch' && github.event.inputs.run_compat == 'true'
+    strategy:
+      fail-fast: false
+      matrix:
+        browser: [chromium, firefox, webkit]
+
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v5
+
+      - name: Set up Python
+        uses: actions/setup-python@v6
+        with:
+          python-version: '3.11'
+          cache: 'pip'
+
+      - name: Set up Node.js (required by the Browser library driver)
+        uses: actions/setup-node@v6
+        with:
+          node-version: '22'
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -r requirements.txt
+
+      - name: Cache Playwright browsers
+        uses: actions/cache@v5
+        id: playwright-cache
+        with:
+          path: ~/.cache/ms-playwright
+          key: playwright-${{ runner.os }}-${{ hashFiles('requirements.txt') }}
+
+      - name: Install browsers (rfbrowser init)
+        run: rfbrowser init
+
+      - name: Run compat-tagged tests on ${{ matrix.browser }}
+        run: |
+          robot \
+            --include compat \
+            --variable HEADLESS:True \
+            --variable BROWSER:${{ matrix.browser }} \
+            --skiponfailure skip \
+            --outputdir results-${{ matrix.browser }} \
+            --xunit xunit-${{ matrix.browser }}.xml \
+            tests/
+        continue-on-error: false
+
+      - name: Upload results (${{ matrix.browser }})
+        if: always()
+        uses: actions/upload-artifact@v6
+        with:
+          name: compat-results-${{ matrix.browser }}
+          path: results-${{ matrix.browser }}/
+          retention-days: 15

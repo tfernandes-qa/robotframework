@@ -35,6 +35,14 @@ Double Click Cadastrar Button
     ...                duplicated users when submitted twice.
     Click With Options    ${NEW_USER_CADASTRAR_BUTTON}    left    clickCount=2
 
+Create User Form Should Still Be Displayed
+    [Documentation]    Confirms that the new user form was not submitted —
+    ...                the admin never left the create-user page (used when
+    ...                the browser's own field validation blocks submission).
+    Wait For Elements State    ${NEW_USER_NAME}    visible    timeout=5s
+    ${CURRENT_URL}=    Get Url
+    Should Be Equal As Strings    ${CURRENT_URL}    ${BASE_URL}/admin/cadastrarusuarios
+
 User Should Be Created
     [Documentation]    Confirms that the user was created successfully by
     ...                checking for a success message on the screen.

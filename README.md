@@ -149,6 +149,19 @@ Contains:
     products" admin cards.
   - `Products Table Should Be Displayed` — confirms the products table is
     visible.
+  - `Click Editar Button For User` / `Click Excluir Button For User` — find
+    the users table row matching a given email and click its "Editar" /
+    "Excluir" button.
+  - `User Row Should Not Be Displayed` — confirms no row in the users table
+    matches a given email (e.g. after deleting that user).
+  - `Some Editable Field Should Appear` — confirms at least one `<input>`
+    element is present on the page, used to check whether clicking
+    "Editar" produced any editable UI at all (shared by the user and
+    product "Editar" known-issue tests).
+  - `Click Editar Button For Product` / `Click Excluir Button For Product`
+    — same idea as the user ones, but for a row in the products table.
+  - `Product Row Should Not Be Displayed` — confirms no row in the
+    products table matches a given product name.
 
 ### `resources/pages/newUser_page.resource`
 
@@ -162,6 +175,9 @@ Page object for the admin's "create user" screen. Contains:
   - `Click Cadastrar Button` — submits the new user form.
   - `User Should Be Created` — asserts the created user's email is visible
     in the users table.
+  - `Create User Form Should Still Be Displayed` — confirms the form was
+    not submitted (used when the browser's own field validation, e.g. an
+    invalid email format, blocks submission).
 
 ### `resources/pages/newProduct_page.resource`
 
@@ -178,6 +194,18 @@ Page object for the admin's "create product" screen. Contains:
     form.
   - `Product Should Be Created` — asserts the created product's name is
     visible in the products table.
+  - `Create Product Form Should Still Be Displayed` — confirms the form
+    was not submitted (used when the browser's own field validation, e.g.
+    a decimal value in the whole-number quantity field, blocks
+    submission).
+  - `Type Non Numeric Text Into Price Field` / `Type Non Numeric Text Into
+    Quantity Field` — simulate real keyboard typing of non-numeric text
+    into the price/quantity fields (as opposed to setting the value
+    directly), since both are `type="number"` inputs that silently ignore
+    non-numeric keystrokes.
+  - `Price Field Should Be Empty` / `Quantity Field Should Be Empty` —
+    confirm a field's value is empty (used after attempting to type
+    non-numeric text into it).
 
 ### `resources/pages/store_page.resource`
 
@@ -201,6 +229,14 @@ Page object for the store/home screen's shopping list feature. Contains:
     the quantity of the given product went up/down accordingly in the
     shopping list.
   - `List Should Be Empty` — verifies that the shopping list is empty.
+  - `Decrease Button Should Be Disabled` — confirms the decrease button is
+    disabled once the item's quantity is already at the minimum (1).
+  - `Product Card Should Not Be In Catalog` — confirms no catalog card
+    matches a given product name (e.g. after it was added to the list).
+  - `Double Click Increase Quantity Button` — double-clicks the increase
+    button, to check for race conditions (skipped/duplicated clicks).
+  - `Item Quantity Should Be` — verifies a product's quantity in the list
+    matches an exact expected value.
 
 ### `resources/api/users_api.resource`
 
@@ -258,6 +294,28 @@ scenarios such as:
 - Blank email or blank password show the corresponding required-field
   message.
 - Invalid email format shows a validation message.
+- Leading/trailing whitespace around an otherwise valid email/password is
+  not trimmed by the app, so it is treated as invalid credentials.
+- An uppercased version of an otherwise valid email fails to log in — the
+  app treats the email comparison as case-sensitive.
+- An excessively long email/password (500+ characters, no front-end
+  maxlength on either field) is rejected by the app's own email format
+  validation.
+- Special characters in the email field (e.g. an XSS payload) never reach
+  the app: the browser's native email input validation blocks the form
+  from submitting, so the user stays on the login page.
+- An XSS/emoji/unicode payload in the password field (with an otherwise
+  valid email) reaches the app and is safely rejected as invalid
+  credentials, with no script execution or console errors.
+- A logged in user's session survives a page reload (F5) — the app persists
+  the session (e.g. in local storage), so the user stays on the home page.
+- Logging out in one browser tab ends the session in another tab sharing
+  the same browser context, once that other tab is refreshed.
+- A logged in user clicking logout is redirected back to the login page.
+- After logout, navigating back with the browser's back button does not
+  restore the session (login page is shown, not home).
+- After logout, navigating directly to the home page URL redirects back to
+  the login page.
 
 The `*** Keywords ***` section of this file defines the Given/When/Then style
 keywords used by the test cases (e.g. `this user types the email`,
@@ -274,6 +332,26 @@ object to run scenarios such as:
 - Adding two items to the shopping list.
 - Clearing the shopping list.
 - Increasing/decreasing the quantity of an item already in the list.
+- **Known issue**: the "decrease quantity" button never gets a `disabled`
+  state, even once an item's quantity is already at the minimum (1) — it
+  stays clickable with no visual feedback that the action has no effect.
+  The underlying logic is correct (quantity never drops to 0 or below, and
+  the item is never removed), only the missing disabled state is the
+  defect. `Decrease Button Should Be Disabled When Quantity Is At The
+  Minimum` documents the expected, correct behavior and is tagged
+  `known-issue`/`skip`.
+- Adding a product to the list removes its card from the catalog grid —
+  the app's way of preventing the same item from being added twice; there
+  is no way to duplicate a line through the UI.
+- Adding a product registered with zero stock (quantity) to the list
+  works with no restriction — the app does not enforce a stock check when
+  adding items.
+- Double-clicking the "increase quantity" button registers as two
+  separate clicks (quantity goes from 1 to 3), with no race condition
+  that skips or duplicates a click.
+- Clearing the list removes every item, not just the first one added — a
+  more thorough check of the "Limpar Lista" button than the single-item
+  clear test.
 
 Each `Given` step creates its own product(s) via the API (`Create Admin
 User Via Api` + `Get Admin Auth Token` + `Create Product Via Api`, with a
@@ -318,15 +396,50 @@ scenarios such as:
 - The admin not being able to create a user or a product with a name/email
   that already exists (negative cases), asserting the corresponding error
   message.
+- The admin not being able to create a user with a blank name, a blank
+  password, or an invalid email format (negative/validation cases).
 - Double-clicking the submit button on the new user form not creating two
   duplicated users.
+- An admin deleting an existing user from the users list via the
+  "Excluir" button, confirming the user is removed both from the table and
+  from the backend.
+- **Known issue**: the "Editar" button on the users list has no wired
+  behavior (clicking it produces no visible change on the page — no input
+  field, no navigation, no modal), so there is currently no way to edit an
+  existing user through the UI. `Admin Should Be Able To Edit An Existing
+  User` documents the expected, correct behavior and is tagged
+  `known-issue`/`skip`, so it is expected to fail until that defect is
+  fixed — the same pattern used for the RBAC known issue in
+  `tests/login/login.robot`.
+- An admin deleting an existing product from the products list via the
+  "Excluir" button, confirming the product is removed both from the table
+  and from the backend. **Known issue**: same as users, the products
+  list's "Editar" button also has no wired behavior —
+  `Admin Should Be Able To Edit An Existing Product` documents this and is
+  tagged `known-issue`/`skip`.
+- The admin not being able to create a product with a negative or zero
+  price (`Preco deve ser um número positivo`) or a negative quantity
+  (`Quantidade deve ser maior ou igual a 0`), or with a blank name
+  (`Nome é obrigatório`) or blank description (`Descricao é
+  obrigatório`).
+- The price and quantity fields are HTML `type="number"` inputs with no
+  explicit `step`, so the browser itself — not the app — rejects any
+  non-numeric keystroke (the field stays empty) and blocks submission of
+  any decimal value (e.g. `10.12` or `2.5`) via native validation.
+- The price field accepts scientific notation (e.g. `1e3`), which the app
+  treats as a valid positive number and creates the product with — and a
+  quantity of zero is accepted (an out-of-stock product), consistent with
+  the negative-quantity message wording ("maior ou igual a 0"). Both are
+  captured as boundary-case regression tests.
 
-The five tests above that create extra data (new user, new product, the
-two "cannot create duplicated ..." cases, and the double-click case) each
-define their own `[Teardown]`, chained with `AND`
-onto `Cleanup Login Test`, to delete that data via the API (e.g. `Delete
-User Via Api`, `Delete All Users With Email Via Api`, `Cleanup Product By
-Name Via Api`). A local `[Teardown]` replaces the suite's `Test Teardown`
+The eleven tests above that create extra data (new user, new product, the
+two "cannot create duplicated ..." cases, the double-click case, the
+delete/edit-user and delete/edit-product cases, and the two accepted
+boundary-price/quantity cases) each define their own `[Teardown]`, chained
+with `AND` onto `Cleanup Login Test`, to delete that data via the API
+(e.g. `Delete User Via Api`, `Delete All Users With Email Via Api`,
+`Cleanup Product By Name Via Api`). A local `[Teardown]` replaces the
+suite's `Test Teardown`
 instead of running in addition to it, so `Cleanup Login Test` has to be
 included explicitly every time — and because `Run Keywords` only chains
 multiple keywords when they're separated with `AND` (a single keyword
@@ -348,9 +461,10 @@ without touching test code:
 
 | Dimension        | Tags                              | Meaning |
 |-------------------|------------------------------------|---------|
-| **Execution set**  | `smoke`, `regression`             | `regression` is on every test (the full suite). `smoke` marks the small, fast subset of critical happy paths — currently 5 of the 21 tests — meant to run on every PR for quick feedback. |
+| **Execution set**  | `smoke`, `regression`             | `regression` is on every test (the full suite). `smoke` marks the small, fast subset of critical happy paths — currently 5 of the 53 tests — meant to run on every PR for quick feedback. |
 | **Criticality**    | `critical`, `high`, `medium`      | `critical` = core journeys the app is unusable without (login, admin create user/product, add to cart). `high` = important supporting flows (listing, quantity, clearing). `medium` = negative/validation edge cases. |
 | **Layer**          | `ui`                               | All current tests drive the browser end-to-end (API is only used for setup/teardown). Kept as an explicit tag so future API-only suites can be filtered out (`--exclude ui`) or in (`--include ui`) separately. |
+| **Compatibility**  | `compat`                          | A small, deliberately curated cross-browser subset (currently 12 of the 53 tests) run against Chromium, Firefox, and WebKit — see [Cross-Browser Compatibility](#cross-browser-compatibility) below. Not run on every PR (only Chromium is); this tag drives a separate, less frequent job. |
 
 Module tags (`login`, `admin`, `store`/`list`) are also kept so a single
 feature area can be run in isolation, e.g. `robot --include admin tests/`.
@@ -389,6 +503,68 @@ tags to control how much of it runs per trigger:
   `robot-framework-results` artifact, and `xunit.xml` as the
   `robot-junit-report` artifact (both kept for 15 days), and writes a short
   summary to the GitHub Actions run.
+
+## Cross-Browser Compatibility
+
+The suite runs on Chromium by default (`${BROWSER}` in
+`resources/variables/global.resource`), driven by the Browser library
+(Playwright), which also supports Firefox and WebKit out of the box —
+`rfbrowser init` downloads all three engines already, even though only
+Chromium was actually being exercised until this was added.
+
+### Why not just run every test on all three browsers
+
+Running all 53 tests × 3 engines on every PR would triple CI time and load
+on the shared public ServeRest demo backend (which already shows occasional
+flakiness under normal single-browser load). Instead, a small, deliberately
+curated subset is tagged `compat` (12 of the 53 tests) — the `critical`
+happy paths plus every test whose outcome depends on browser-native
+behavior (HTML5 constraint validation on `type="email"`/`type="number"`
+inputs, whitespace handling), which is exactly the kind of test most
+likely to diverge between engines. Everything else keeps running on
+Chromium only, since it doesn't depend on engine-specific behavior.
+
+### Spike results (2026-08-24)
+
+Before adopting this, the full suite was run once against Firefox and once
+against WebKit (`--variable BROWSER:firefox` / `webkit`) to validate the
+approach with real data instead of assumptions:
+
+| Engine | Result | Known-issues (expected failures) | Genuine compatibility findings |
+|---|---|---|---|
+| Chromium (baseline) | 53/53 (excl. known-issues) | 4/4 | — |
+| Firefox | 47/53 | 4/4 reproduced identically | **1** (see below) |
+| WebKit | 48/53 | 4/4 reproduced identically | 0 (1 failure was transient flakiness, confirmed by re-running in isolation) |
+
+The 4 known-issue tests (`Admin Should Be Able To Edit An Existing User`,
+`Admin Should Be Able To Edit An Existing Product`, `Regular User Should
+Not Be Able To Access The Admin Home Page`, `Decrease Button Should Be
+Disabled When Quantity Is At The Minimum`) failed identically on all three
+engines — good evidence they're genuine app defects, not test artifacts.
+
+None of the tests that rely on browser-native `type="email"`/`type="number"`
+validation (XSS payload in email, decimal price/quantity, non-numeric
+keystrokes) diverged on any engine — asserting on *outcome* (page stayed
+put, field stayed empty) rather than the browser's own (localized,
+engine-specific) validation message text turned out to matter here.
+
+**One genuine finding**: `Login With Padded Email And Password Should
+Fail` fails consistently on Firefox only. Root cause, confirmed with
+`Get Property`/`Wait For Response` diagnostics: Firefox silently trims
+leading/trailing whitespace from `type="email"` inputs (Chromium and
+WebKit don't), so the email arrives clean while the password stays
+padded — and that specific combination never even fires the login network
+request on Firefox (no console error either). This is tracked as a known
+limitation in the test's own `[Documentation]` rather than fixed yet; a
+straightforward fix would be padding only the password field, since no
+engine sanitizes `type="password"` inputs.
+
+### Running compat tests locally
+
+```bash
+robot --include compat --variable BROWSER:firefox tests/
+robot --include compat --variable BROWSER:webkit tests/
+```
 
 ## Setup
 

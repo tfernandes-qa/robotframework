@@ -35,6 +35,43 @@ Admin Page Should Be Displayed
     ${CURRENT_URL}=    Get Url
     Should Be Equal As Strings    ${CURRENT_URL}    ${BASE_URL}/admin/home
 
+Click Logout Button
+    [Documentation]    Clicks the logout button to end the current user's session.
+    Click    ${LOGOUT_BUTTON}
+
+Click Editar Button For User
+    [Documentation]    Clicks the "Editar" button on the users table row
+    ...                matching the given email.
+    [Arguments]    ${EMAIL}
+    ${ROW}=    Set Variable    ${USERS_TABLE}//tr[td[normalize-space(text())='${EMAIL}']]
+    Wait For Elements State    ${ROW}    visible    timeout=10s
+    Click    ${ROW}//button[normalize-space(text())='Editar']
+
+Click Excluir Button For User
+    [Documentation]    Clicks the "Excluir" button on the users table row
+    ...                matching the given email.
+    [Arguments]    ${EMAIL}
+    ${ROW}=    Set Variable    ${USERS_TABLE}//tr[td[normalize-space(text())='${EMAIL}']]
+    Wait For Elements State    ${ROW}    visible    timeout=10s
+    Click    ${ROW}//button[normalize-space(text())='Excluir']
+
+User Row Should Not Be Displayed
+    [Documentation]    Confirms that no row in the users table matches the
+    ...                given email (e.g. after deleting that user).
+    [Arguments]    ${EMAIL}
+    ${ROW}=    Set Variable    ${USERS_TABLE}//tr[td[normalize-space(text())='${EMAIL}']]
+    Wait For Elements State    ${ROW}    hidden    timeout=10s
+
+Some Editable Field Should Appear
+    [Documentation]    Confirms that clicking "Editar" produced some way to
+    ...                edit the user — at least one input field must be
+    ...                present on the page (e.g. inline editable fields, or
+    ...                a form/modal with inputs).
+    ${INPUTS}=    Get Elements    //input
+    ${COUNT}=    Get Length    ${INPUTS}
+    Should Be True    ${COUNT} > 0
+    ...    msg=Expected at least one editable input field to appear after clicking "Editar", but found none.
+
 Click Cadastrar Button On Cadastro De Usuario Card
     [Documentation]    Clicks the "Cadastrar" button on the "Cadastro de Usuario"
     ...                card, which is only visible to admin users.
@@ -48,6 +85,29 @@ Click Listar Button On Listar Usuarios Card
 Users Table Should Be Displayed
     [Documentation]    Confirms that the users table is displayed on the page.
     Wait For Elements State    ${USERS_TABLE}    visible
+
+Click Editar Button For Product
+    [Documentation]    Clicks the "Editar" button on the products table row
+    ...                matching the given product name.
+    [Arguments]    ${PRODUCT_NAME}
+    ${ROW}=    Set Variable    ${PRODUCTS_TABLE}//tr[td[normalize-space(text())='${PRODUCT_NAME}']]
+    Wait For Elements State    ${ROW}    visible    timeout=10s
+    Click    ${ROW}//button[normalize-space(text())='Editar']
+
+Click Excluir Button For Product
+    [Documentation]    Clicks the "Excluir" button on the products table row
+    ...                matching the given product name.
+    [Arguments]    ${PRODUCT_NAME}
+    ${ROW}=    Set Variable    ${PRODUCTS_TABLE}//tr[td[normalize-space(text())='${PRODUCT_NAME}']]
+    Wait For Elements State    ${ROW}    visible    timeout=10s
+    Click    ${ROW}//button[normalize-space(text())='Excluir']
+
+Product Row Should Not Be Displayed
+    [Documentation]    Confirms that no row in the products table matches
+    ...                the given product name (e.g. after deleting it).
+    [Arguments]    ${PRODUCT_NAME}
+    ${ROW}=    Set Variable    ${PRODUCTS_TABLE}//tr[td[normalize-space(text())='${PRODUCT_NAME}']]
+    Wait For Elements State    ${ROW}    hidden    timeout=10s
 
 Click Cadastrar Button On Cadastrar Produtos Card
     [Documentation]    Clicks the "Cadastrar" button on the "Cadastrar Produtos"

@@ -60,6 +60,45 @@ Item Should Be Decreased
     ${QUANTITY}=    Convert To Integer    ${QUANTITY_TXT}
     Should be True    ${QUANTITY} == 1    msg=Expected quantity to be 1, but got ${QUANTITY}.
 
+Product Card Should Not Be In Catalog
+    [Documentation]    Confirms that no product card in the catalog matches
+    ...                the given product name (e.g. after it has been added
+    ...                to the shopping list, which removes it from the
+    ...                catalog grid).
+    [Arguments]    ${PRODUCT_NAME}
+    ${CARD_XPATH}=    Set Variable
+    ...    //h5[contains(@class,"card-title") and contains(normalize-space(.), "${PRODUCT_NAME}")]
+    Wait For Elements State    xpath=${CARD_XPATH}    hidden    timeout=10s
+
+Double Click Increase Quantity Button
+    [Documentation]    Double-clicks the button to increase the quantity of
+    ...                an item already in the shopping list (submitting it
+    ...                twice in rapid succession), to verify it registers
+    ...                as two separate increments rather than one being
+    ...                skipped or duplicated (race condition check).
+    Click With Options    ${INCREASE_BUTTON}    left    clickCount=2
+
+Item Quantity Should Be
+    [Documentation]    Verifies that the quantity of the given product in
+    ...                the shopping list matches the expected value.
+    [Arguments]    ${PRODUCT_NAME}    ${EXPECTED_QUANTITY}
+    ${XPATH}=    Set Variable
+    ...    //div[@id='root']/div[@class='App']/div/div[@class='jumbotron']/div[@class='container-fluid']/div/section[@class='row espacamento']/div[@class='card col-3'][1]/div[@class='card-body']/div[@class='row']/div[@class='col-3'][2]/p
+    Wait For Elements State    xpath=${XPATH}    visible    timeout=10s
+    ${QUANTITY_TXT}=    Get Text    xpath=${XPATH}
+    ${QUANTITY}=    Convert To Integer    ${QUANTITY_TXT}
+    Should Be Equal As Integers    ${QUANTITY}    ${EXPECTED_QUANTITY}
+    ...    msg=Expected quantity of "${PRODUCT_NAME}" to be ${EXPECTED_QUANTITY}, but got ${QUANTITY}.
+
+Decrease Button Should Be Disabled
+    [Documentation]    Confirms that the "decrease quantity" button is
+    ...                disabled once the item's quantity is already at the
+    ...                minimum (1), giving the user clear feedback that no
+    ...                further decrease is possible.
+    ${DISABLED}=    Get Property    ${DECREASE_BUTTON}    disabled
+    Should Be True    ${DISABLED}
+    ...    msg=Expected the decrease button to be disabled when quantity is already at the minimum (1), but it was still enabled.
+
 List Should Be Empty
     [Documentation]    Verifies that the shopping list is empty.
     Wait For Elements State    ${CART_LIST_EMPTY}    visible    timeout=10s

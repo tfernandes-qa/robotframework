@@ -1,46 +1,219 @@
 "DESCRIPTION","DURATION IN MS","NAME","PARENT SUITE","START TIME","STATUS","STOP TIME","SUB SUITE","SUITE","TEST CLASS","TEST METHOD"
-"A user who enters an invalid email and/or password and clicks
-""Entrar"" must see a message informing that the
-credentials are invalid.","1220","User With Invalid Password Should See Error Message","Tests","2026-08-17","passed","2026-08-17","Login","Login","",""
 "This test case verifies that the admin cannot create
-a new product using a name that is already registered.","2429","Admin Cannot Create Product With Duplicated Name","Tests","2026-08-17","passed","2026-08-17","Admin","Admin","",""
+a new product when the description field is left
+blank.","2070","Admin Cannot Create Product With Blank Description","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"A user who enters otherwise valid credentials, but
+with leading and trailing whitespace around the email
+and password, must not be logged in. The app does not
+trim these fields, so the padded values must be
+treated as invalid credentials, same as any other
+mismatch.
+CROSS-BROWSER NOTE: this test is known to fail on
+Firefox — Firefox silently trims leading/trailing
+whitespace from `type=""email""` inputs (Chromium and
+WebKit do not), so the email arrives clean while the
+password stays padded; the resulting mismatched
+login then never even fires its network request on
+Firefox. Tracked for a future fix (e.g. pad only the
+password) rather than addressed now.","1218","Login With Padded Email And Password Should Fail","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"A logged in user who clicks the logout button must be
+signed out and redirected back to the login page.","2046","User Can Logout And Be Redirected To The Login Page","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"This test case verifies that an admin can create a new user.","5470","Admin Wants To Create a New User","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that an admin can edit an
+existing user by clicking the ""Editar"" button on the
+users table.
+KNOWN ISSUE: as of this writing, the ""Editar"" button
+on the ServeRest front-end's user list has no wired
+behavior — clicking it produces no visible change on
+the page (no input field appears, no navigation, no
+modal), so there is currently no way to edit an
+existing user through the UI, even though the button
+is present. This test documents the expected,
+correct behavior, so it currently fails until that
+defect is fixed.","12938","Admin Should Be Able To Edit An Existing User","Tests","2026-08-24","skipped","2026-08-24","Admin","Admin","",""
 "A user who enters an invalid email and/or password and clicks
 ""Entrar"" must see a message informing that the
-credentials are invalid.","1348","User With Blank Password Should See Error Message","Tests","2026-08-17","passed","2026-08-17","Login","Login","",""
+credentials are invalid.","1317","User With Invalid Email Should See Error Message","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"A logged in user who reloads the page (F5) must
+remain authenticated and see the home page — the
+session is not lost on reload.","2085","Session Should Persist After Page Reload","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"This test case verifies that a user can increase the quantity of an item in the list.","3175","User Can Increase Quantity of an Item in the List","Tests","2026-08-24","passed","2026-08-24","Store","Store","",""
+"This test case verifies that the admin cannot create
+a new product with a negative quantity.","2094","Admin Cannot Create Product With Negative Quantity","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that the admin cannot submit
+the new user form with an invalid email format. The
+browser's own email input validation blocks the form
+from being submitted at all, same as on the login
+screen.","2032","Admin Cannot Create User With Invalid Email Format","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that the ""decrease quantity""
+button becomes disabled once an item's quantity in
+the shopping list is already at the minimum (1),
+giving the user clear visual feedback that no
+further decrease is possible.
+KNOWN ISSUE: as of this writing, the button never
+gets a ""disabled"" state — it remains clickable even
+when the quantity is already at 1. The underlying
+logic is correct (the quantity never drops to 0 or
+below, and the item is never removed from the
+list), but the UI gives no indication that clicking
+the button again has no effect. This test documents
+the expected, correct behavior, so it currently
+fails until that defect is fixed.","2988","Decrease Button Should Be Disabled When Quantity Is At The Minimum","Tests","2026-08-24","skipped","2026-08-24","Store","Store","",""
+"This test case verifies that the admin cannot submit
+the new product form with an excessively precise
+decimal price (e.g. more decimal places than a
+cent). The price field has no explicit ""step""
+attribute, so the browser defaults to whole numbers
+only — any fractional value is blocked by the
+browser's own field validation before the form can
+be submitted.","2060","Admin Cannot Create Product With Decimal Price","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"A user who enters a valid email and password and clicks
+""Entrar"" must be redirected to the home page.","4029","User With Valid Credentials Should Be Redirected To The Home","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"A user who logs out and then tries to reach the home
+page directly by URL must be redirected back to the
+login page instead of seeing the home page.","2008","After Logout Direct Navigation To Home Should Redirect To The Login Page","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"A user who enters a valid email but a password
+containing script tags, emoji and unicode characters
+must not be authenticated, must see the normal
+invalid-credentials message (proving the payload
+reached the app/API and was rejected as a wrong
+password, not executed as script), and the app must
+not crash or throw any console errors.","1173","Login With XSS And Unicode Payload In Password Should Fail Safely","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"This test case verifies that an admin user can access the admin page.","3049","Admin Can Access Admin Page","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"A user who enters an invalid email and/or password and clicks
+""Entrar"" must see a message informing that the
+credentials are invalid.","1484","User With Blank Password Should See Error Message","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"This test case verifies that once a product has been
+added to the shopping list, its card is removed from
+the catalog grid on the home page. This is the app's
+way of preventing the same item from being added
+twice — there is no way to duplicate a line or
+double-add an item through the UI, since the card is
+simply no longer there to click again.","2821","Product Card Disappears From Catalog After Being Added To The List","Tests","2026-08-24","passed","2026-08-24","Store","Store","",""
+"A user who enters a valid email and password and clicks
+""Entrar"" must be redirected to the home page.","1311","User With Invalid Email Format Should See Error Message","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"This test case verifies that an admin can see the list of products.","2099","Admin Wants To List All Products","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that double-clicking the
+""Cadastrar"" button on the new user registration form
+does not create two users with the same data.","2970","Double Click On Submit Should Not Create Duplicated User","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that an admin can delete an
+existing user from the users list, and that the user
+is actually removed (not just hidden in the UI).","3593","Admin Can Delete A User From The Users List","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"A user who logs out and then navigates back using the
+browser's back button must not have their session
+restored — they must still see the login page, not
+the home page.","1938","After Logout Browser Back Should Not Restore The Session","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"A user logged in on the home page, who opens a second
+browser tab (tabs in the same browser context share
+the same session storage) and logs out there, must no
+longer be authenticated on the first tab either, once
+it is refreshed.","2637","Logout In One Tab Should End The Session In Other Tabs","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"This test case verifies that the admin cannot create
+a new product using a name that is already registered.","2499","Admin Cannot Create Product With Duplicated Name","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"A user who enters otherwise valid credentials, but
+with the email's case changed (e.g. all uppercase),
+must not be logged in. The app treats the email
+comparison as case-sensitive, so the uppercased
+value must be treated as invalid credentials.","1219","Login With Uppercased Email Should Fail","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"This test case verifies that a user can add two items to the list.","6192","User Can Add 2 Items to List","Tests","2026-08-24","passed","2026-08-24","Store","Store","",""
+"This test case verifies that double-clicking the
+""increase quantity"" button on an item in the
+shopping list registers as two separate clicks (the
+quantity goes from 1 to 3), with no race condition
+that would skip or duplicate a click.","2768","Double Click On Increase Should Add Exactly Two To The Quantity","Tests","2026-08-24","passed","2026-08-24","Store","Store","",""
+"This test case verifies that the admin cannot create
+a new product with a negative price. Price is a
+financial field, so this is a critical validation to
+have covered.","2069","Admin Cannot Create Product With Negative Price","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"A user who enters an invalid email and/or password and clicks
+""Entrar"" must see a message informing that the
+credentials are invalid.","1389","User With Invalid Password Should See Error Message","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"This test case verifies that the admin cannot create
+a new product when the name field is left blank.","2085","Admin Cannot Create Product With Blank Name","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that an admin can delete an
+existing product from the products list, and that
+the product is actually removed (not just hidden in
+the UI).","2966","Admin Can Delete A Product From The Products List","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that an admin can create a new product.","2834","Admin Wants To Create A New Product","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that the price and quantity
+fields, being number inputs, structurally reject any
+non-numeric keystrokes — typing letters into either
+field leaves it empty rather than accepting literal
+text.","1876","Admin Cannot Type Non-Numeric Characters Into Price Or Quantity Fields","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that the admin cannot submit
+the new product form with a decimal quantity. The
+quantity field has no explicit ""step"" attribute, so
+the browser defaults to whole numbers only — any
+fractional value is blocked by the browser's own
+field validation before the form can be submitted.","1929","Admin Cannot Create Product With Decimal Quantity","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case documents that a quantity of zero is
+accepted (an out-of-stock product) — consistent
+with the negative-quantity message wording (""maior
+ou igual a 0"").","2938","Admin Can Create Product With Zero Quantity","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that a user can decrease the quantity of an item in the list.","2947","User Can Decrease Quantity of an Item in the List","Tests","2026-08-24","passed","2026-08-24","Store","Store","",""
+"This test case verifies that clearing the list
+removes every item, not just the first one added —
+a more thorough check of the ""Limpar Lista"" button
+than the existing single-item clear test.","3427","User Can Clear The List With Multiple Items","Tests","2026-08-24","passed","2026-08-24","Store","Store","",""
+"This test case verifies that the admin cannot create
+a new user using an email that is already registered.","2319","Admin Cannot Create User With Duplicated Email","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"A user who enters an invalid email and/or password and clicks
+""Entrar"" must see a message informing that the
+credentials are invalid.","1467","User With Blank Email Should See Error Message","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"A user who enters an excessively long email (500+
+characters) and password must not be able to log in.
+Neither field enforces a maxlength on the front-end
+(confirmed: the full value is accepted into the
+input), but the app's own email format validation
+rejects a local part that long.","1290","Login With Excessively Long Email And Password Should Show Validation Error","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
+"This test case verifies that an admin can edit an
+existing product by clicking the ""Editar"" button on
+the products table.
+KNOWN ISSUE: as of this writing, the ""Editar"" button
+on the ServeRest front-end's product list has no
+wired behavior — clicking it produces no visible
+change on the page (no input field appears, no
+navigation, no modal), so there is currently no way
+to edit an existing product through the UI, even
+though the button is present. Same defect as the
+users list's ""Editar"" button. This test documents
+the expected, correct behavior, so it currently
+fails until that defect is fixed.","12673","Admin Should Be Able To Edit An Existing Product","Tests","2026-08-24","skipped","2026-08-24","Admin","Admin","",""
+"This test case verifies that the admin cannot create
+a new user when the password field is left blank.","2009","Admin Cannot Create User With Blank Password","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that the admin cannot create
+a new user when the name field is left blank.","2088","Admin Cannot Create User With Blank Name","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that the admin cannot create
+a new product with a price of zero — the app treats
+zero as not a positive number.","2048","Admin Cannot Create Product With Zero Price","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that an admin can see the list of users.","1990","Admin Wants To See The List Of Users","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case documents that the price field
+accepts scientific notation (e.g. ""1e3""), which the
+app treats as a valid positive number and creates
+the product with — a boundary case worth having
+under regression, since it could otherwise slip
+through as unintended input.","3031","Admin Can Create Product With Price In Scientific Notation","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"A user who enters special/disallowed characters (such
+as ""<"" and "">"", used here to attempt an XSS payload)
+in the email field must not be authenticated: the
+browser's own email input validation blocks the form
+from being submitted at all, so the user must remain
+on the login page.","1079","Login With Special Characters In Email Should Not Authenticate The User","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
 "A logged in regular (non-admin) user who navigates
 directly to the admin home URL must not see the admin
 page and must be redirected to their own home page.
 KNOWN ISSUE: the ServeRest front-end currently does
 not enforce this restriction (see `Admin Page Should
 Not Be Displayed`), so this test is expected to fail
-until that authorization defect is fixed.","6888","Regular User Should Not Be Able To Access The Admin Home Page","Tests","2026-08-17","skipped","2026-08-17","Login","Login","",""
-"A user who enters a valid email and password and clicks
-""Entrar"" must be redirected to the home page.","1373","User With Invalid Email Format Should See Error Message","Tests","2026-08-17","passed","2026-08-17","Login","Login","",""
-"This test case verifies that double-clicking the
-""Cadastrar"" button on the new user registration form
-does not create two users with the same data.","2934","Double Click On Submit Should Not Create Duplicated User","Tests","2026-08-17","passed","2026-08-17","Admin","Admin","",""
-"A user who enters an invalid email and/or password and clicks
-""Entrar"" must see a message informing that the
-credentials are invalid.","1296","User With Blank Email Should See Error Message","Tests","2026-08-17","passed","2026-08-17","Login","Login","",""
-"This test case verifies that an admin can create a new product.","2653","Admin Wants To Create A New Product","Tests","2026-08-17","passed","2026-08-17","Admin","Admin","",""
-"A logged in user whose session token becomes invalid
-and who then tries to reach the admin home page must
-be redirected back to the login page.","2066","User With Invalidated Session Should Be Redirected To The Login Page","Tests","2026-08-17","passed","2026-08-17","Login","Login","",""
-"This test case verifies that an admin can see the list of users.","1708","Admin Wants To See The List Of Users","Tests","2026-08-17","passed","2026-08-17","Admin","Admin","",""
-"This test case verifies that a user can decrease the quantity of an item in the list.","3121","User Can Decrease Quantity of an Item in the List","Tests","2026-08-17","passed","2026-08-17","Store","Store","",""
-"This test case verifies that an admin user can access the admin page.","2271","Admin Can Access Admin Page","Tests","2026-08-17","passed","2026-08-17","Login","Login","",""
-"This test case verifies that an admin can see the list of products.","1639","Admin Wants To List All Products","Tests","2026-08-17","passed","2026-08-17","Admin","Admin","",""
-"This test case verifies that a user can add two items to the list.","5782","User Can Add 2 Items to List","Tests","2026-08-17","passed","2026-08-17","Store","Store","",""
-"This test case verifies that an admin can create a new user.","5635","Admin Wants To Create a New User","Tests","2026-08-17","passed","2026-08-17","Admin","Admin","",""
+until that authorization defect is fixed.","7071","Regular User Should Not Be Able To Access The Admin Home Page","Tests","2026-08-24","skipped","2026-08-24","Login","Login","",""
+"This test case documents that a product registered
+with a quantity (stock) of zero can still be added
+to the shopping list — the app does not enforce any
+stock check when adding items to the list.","2704","User Can Add An Out Of Stock Item To The List","Tests","2026-08-24","passed","2026-08-24","Store","Store","",""
 "This test case verifies that an admin user, who holds
 higher privileges, can also access the regular user's
-home page (store) directly, without being blocked.","2171","Admin Can Access The Regular User Home Page","Tests","2026-08-17","passed","2026-08-17","Admin","Admin","",""
-"This test case verifies that a user can clear the list.","3006","User Can Clear the List","Tests","2026-08-17","passed","2026-08-17","Store","Store","",""
-"A user who enters an invalid email and/or password and clicks
-""Entrar"" must see a message informing that the
-credentials are invalid.","1320","User With Invalid Email Should See Error Message","Tests","2026-08-17","passed","2026-08-17","Login","Login","",""
-"This test case verifies that the admin cannot create
-a new user using an email that is already registered.","2467","Admin Cannot Create User With Duplicated Email","Tests","2026-08-17","passed","2026-08-17","Admin","Admin","",""
-"This test case verifies that a user can increase the quantity of an item in the list.","2959","User Can Increase Quantity of an Item in the List","Tests","2026-08-17","passed","2026-08-17","Store","Store","",""
-"A user who enters a valid email and password and clicks
-""Entrar"" must be redirected to the home page.","4678","User With Valid Credentials Should Be Redirected To The Home","Tests","2026-08-17","passed","2026-08-17","Login","Login","",""
+home page (store) directly, without being blocked.","1948","Admin Can Access The Regular User Home Page","Tests","2026-08-24","passed","2026-08-24","Admin","Admin","",""
+"This test case verifies that a user can clear the list.","3000","User Can Clear the List","Tests","2026-08-24","passed","2026-08-24","Store","Store","",""
+"A logged in user whose session token becomes invalid
+and who then tries to reach the admin home page must
+be redirected back to the login page.","2155","User With Invalidated Session Should Be Redirected To The Login Page","Tests","2026-08-24","passed","2026-08-24","Login","Login","",""
